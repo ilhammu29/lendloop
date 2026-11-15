@@ -1,0 +1,61 @@
+{
+  "name": "LendLoop - Global Error Handler Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capture and format error diagnostics\nconst errorData = $input.item.json;\n\nconst failedWorkflow = errorData.workflow?.name || 'Unknown Workflow';\nconst failedNode = errorData.execution?.lastNodeExecuted || 'Unknown Node';\nconst errorMessage = errorData.execution?.error?.message || 'No detailed error message provided';\nconst executionId = errorData.execution?.id || 'N/A';\nconst timestamp = new Date().toISOString();\n\nconsole.error(`[LendLoop CRITICAL ERROR] Workflow '${failedWorkflow}' failed at node '${failedNode}'`);\nconsole.error(`Execution ID: ${executionId}`);\nconsole.error(`Error Details: ${errorMessage}`);\n\nreturn [{\n  json: {\n    alertLevel: 'CRITICAL',\n    service: 'LendLoop-Automation',\n    workflow: failedWorkflow,\n    failedNode,\n    errorMessage,\n    executionId,\n    timestamp,\n    actionRequired: 'Investigate node configuration, network connectivity, or invalid payload structure.'\n  }\n}];"
+      },
+      "id": "format-error-alert",
+      "name": "Format Error Diagnostics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Administrative notification sink (can connect to Slack, PagerDuty, or Sentry)\nconst alert = $input.item.json;\n\nconsole.log('[LendLoop Admin Alert Dispatched]');\nconsole.log(JSON.stringify(alert, null, 2));\n\nreturn [{\n  json: {\n    alertLogged: true,\n    status: 'recorded',\n    executionId: alert.executionId\n  }\n}];"
+      },
+      "id": "dispatch-admin-alert",
+      "name": "Dispatch Admin Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Diagnostics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Diagnostics": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Admin Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

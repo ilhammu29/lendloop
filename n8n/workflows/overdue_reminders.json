@@ -1,0 +1,176 @@
+{
+  "name": "LendLoop - Overdue Reminders Daily Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-cron-trigger",
+      "name": "Daily Schedule Trigger (9:00 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare signed authentication headers for Convex HTTP request\nconst crypto = require('crypto');\n\nconst timestamp = Date.now().toString();\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET || 'lendloop_shared_hmac_secret_2026';\nconst payloadToSign = `overdue-loans:${timestamp}`;\n\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(payloadToSign);\nconst signature = hmac.digest('hex');\n\nconst convexUrl = ($env.CONVEX_SITE_URL || 'http://localhost:3000').replace(/\\/+$/, '');\n\nreturn [{\n  json: {\n    targetUrl: `${convexUrl}/overdue-loans`,\n    timestamp,\n    signature,\n    secret\n  }\n}];"
+      },
+      "id": "prepare-signed-get",
+      "name": "Prepare Signed Fetch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.targetUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-LendLoop-Signature",
+              "value": "={{ $json.signature }}"
+            },
+            {
+              "name": "X-LendLoop-Timestamp",
+              "value": "={{ $json.timestamp }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.secret }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-overdue-loans",
+      "name": "Fetch Overdue Loans from Convex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process array of overdue loans & compute idempotent write-back signatures\nconst crypto = require('crypto');\n\nconst items = $input.all();\nconst results = [];\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET || 'lendloop_shared_hmac_secret_2026';\nconst convexUrl = ($env.CONVEX_SITE_URL || 'http://localhost:3000').replace(/\\/+$/, '');\nconst todayStr = new Date().toISOString().split('T')[0];\n\nfor (const item of items) {\n  const loan = item.json;\n  if (!loan || !loan.loanId) continue;\n\n  // Deterministic Idempotency Key: prevents duplicate reminders on retries\n  const idempotencyKey = `overdue-${loan.loanId}-${todayStr}`;\n  \n  const writebackBody = {\n    loanId: loan.loanId,\n    idempotencyKey,\n    status: 'sent',\n    details: `Automated overdue reminder sent to ${loan.borrowerEmail} for tool ${loan.toolName} (${loan.daysOverdue} days overdue)`\n  };\n\n  const bodyString = JSON.stringify(writebackBody);\n  const hmac = crypto.createHmac('sha256', secret);\n  hmac.update(bodyString);\n  const writebackSignature = hmac.digest('hex');\n\n  results.push({\n    json: {\n      loanId: loan.loanId,\n      toolName: loan.toolName,\n      borrowerEmail: loan.borrowerEmail,\n      borrowerName: loan.borrowerName,\n      endDate: loan.endDate,\n      daysOverdue: loan.daysOverdue,\n      idempotencyKey,\n      writebackUrl: `${convexUrl}/record-reminder`,\n      writebackBody,\n      writebackSignature\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "prepare-reminders-and-signatures",
+      "name": "Prepare Reminders & Signatures",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate / Dispatch Email Reminder to Borrower\nconst loan = $input.item.json;\n\nconsole.log(`[Overdue Reminder] Sending overdue notice to: ${loan.borrowerEmail}`);\nconsole.log(`Tool: ${loan.toolName} was due on ${loan.endDate} (${loan.daysOverdue} days ago)`);\n\nreturn [{\n  json: {\n    ...loan,\n    reminderDispatched: true,\n    dispatchedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "dispatch-borrower-reminder",
+      "name": "Dispatch Borrower Reminder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.writebackUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-LendLoop-Signature",
+              "value": "={{ $json.writebackSignature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.writebackBody) }}",
+        "options": {
+          "retryOnFail": true,
+          "maxTries": 3,
+          "waitBetweenTries": 2000
+        }
+      },
+      "id": "idempotent-writeback",
+      "name": "Idempotent Write-Back to Convex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300]
+    }
+  ],
+  "connections": {
+    "Daily Schedule Trigger (9:00 AM)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Signed Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Signed Fetch": {
+      "main": [
+        [
+          {
+            "node": "Fetch Overdue Loans from Convex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overdue Loans from Convex": {
+      "main": [
+        [
+          {
+            "node": "Prepare Reminders & Signatures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Reminders & Signatures": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Borrower Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch Borrower Reminder": {
+      "main": [
+        [
+          {
+            "node": "Idempotent Write-Back to Convex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

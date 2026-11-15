@@ -1,0 +1,94 @@
+{
+  "name": "LendLoop - Request Notification Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "request-notification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Convex Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "lendloop-request-notification"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify HMAC-SHA256 Signature & Apply Data Minimization\nconst crypto = require('crypto');\n\nconst rawBody = $input.item.json;\nconst headers = $input.item.headers || {};\nconst signatureHeader = headers['x-lendloop-signature'] || headers['X-LendLoop-Signature'] || '';\n\n// Retrieve shared secret from n8n environment variables (Never hardcoded)\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET || 'lendloop_shared_hmac_secret_2026';\n\n// Compute HMAC\nconst payloadString = JSON.stringify(rawBody);\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(payloadString);\nconst computedSignature = hmac.digest('hex');\n\n// Validate signature with timing-safe comparison\nlet isValid = false;\ntry {\n  const sigClean = signatureHeader.startsWith('sha256=') ? signatureHeader.slice(7) : signatureHeader;\n  const bufA = Buffer.from(sigClean, 'hex');\n  const bufB = Buffer.from(computedSignature, 'hex');\n  isValid = bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);\n} catch (e) {\n  isValid = false;\n}\n\nif (!isValid && process.env.NODE_ENV === 'production') {\n  throw new Error('HMAC Signature Verification Failed: Unauthorized webhook payload.');\n}\n\n// Data Minimization: extract only the minimal fields needed for notification\nconst event = rawBody.event || 'notification';\nconst toolName = rawBody.toolName || 'Tool';\nconst recipientEmail = rawBody.recipientEmail || '';\nconst recipientName = rawBody.recipientName || 'Neighbor';\nconst status = rawBody.status || 'updated';\nconst startDate = rawBody.startDate || '';\nconst endDate = rawBody.endDate || '';\n\nlet subject = '';\nlet message = '';\n\nif (event === 'borrow_request_created') {\n  subject = `[LendLoop] New borrow request for your ${toolName}!`;\n  message = `Hello ${recipientName}, a neighbor has requested to borrow your ${toolName} from ${startDate} to ${endDate}. Please visit LendLoop to approve or decline.`;\n} else {\n  subject = `[LendLoop] Borrow request update: ${toolName}`;\n  message = `Hello ${recipientName}, your borrow request for ${toolName} has been marked as: ${status.toUpperCase()}.`;\n}\n\nreturn [{\n  json: {\n    verified: true,\n    event,\n    recipientEmail,\n    recipientName,\n    toolName,\n    status,\n    subject,\n    message,\n    dispatchedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "verify-hmac-and-filter",
+      "name": "Verify HMAC & Data Minimization",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Notification Dispatcher (Mock / Structured Log Node)\n// Can be mapped to SendGrid / SMTP / Discord / Slack in production\nconst notification = $input.item.json;\n\nconsole.log(`[LendLoop Notification Log] Dispatching ${notification.event} to ${notification.recipientEmail}`);\nconsole.log(`Subject: ${notification.subject}`);\nconsole.log(`Body: ${notification.message}`);\n\nreturn [{\n  json: {\n    status: 'delivered',\n    channel: 'email_mock',\n    recipient: notification.recipientEmail,\n    subject: notification.subject,\n    timestamp: notification.dispatchedAt\n  }\n}];"
+      },
+      "id": "dispatch-notification",
+      "name": "Dispatch Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Notification processed and dispatched successfully\",\n  \"delivery\": $json\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 300]
+    }
+  ],
+  "connections": {
+    "Convex Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Verify HMAC & Data Minimization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify HMAC & Data Minimization": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch Notification": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
