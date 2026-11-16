@@ -60,7 +60,7 @@ export default function Navbar() {
               href={isSignedIn ? "/dashboard" : "/"}
               className="flex items-center gap-2.5 group"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/10 group-hover:scale-105 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm group-hover:bg-emerald-700 transition-colors">
                 <Wrench className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -96,7 +96,7 @@ export default function Navbar() {
                           className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                             isActive
                               ? "bg-emerald-400 text-slate-950"
-                              : "bg-emerald-600 text-white animate-pulse"
+                              : "bg-emerald-600 text-white"
                           }`}
                         >
                           {link.badge}
@@ -112,11 +112,11 @@ export default function Navbar() {
           {/* Right Header: Badges & Auth */}
           <div className="flex items-center gap-3">
             {/* System Status Indicator */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/80 border border-slate-200/60 text-[11px] font-medium text-slate-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-md bg-slate-100 border border-slate-200/80 text-[11px] font-medium text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
               <span>Convex Realtime</span>
               <span className="text-slate-300">•</span>
-              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+              <span className="w-2 h-2 rounded-full bg-slate-500"></span>
               <span>n8n Webhook</span>
             </div>
 
