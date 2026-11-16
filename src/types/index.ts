@@ -19,6 +19,7 @@ export interface PublicTool {
   _id: string;
   name: string;
   category: ToolCategory;
+  imageUrl?: string;
   status: ToolStatus;
 }
 
@@ -30,6 +31,7 @@ export interface ToolItem {
   category: ToolCategory;
   condition: ToolCondition;
   description: string;
+  imageUrl?: string;
   status: ToolStatus;
   isTrustedLender?: boolean;
   createdAt: number;

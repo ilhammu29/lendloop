@@ -43,6 +43,24 @@ export const requestBorrow = mutation({
       throw new Error("Borrow start date cannot be after return date.");
     }
 
+    // Date Conflict Validation: Ensure tool is not already booked during this window
+    const existingApprovedLoans = await ctx.db
+      .query("loans")
+      .withIndex("by_tool", (q) => q.eq("toolId", args.toolId))
+      .filter((q) => q.eq(q.field("status"), "approved"))
+      .collect();
+
+    const conflictingLoan = existingApprovedLoans.find((loan) => {
+      // Intervals [A, B] and [C, D] overlap if A <= D and C <= B
+      return args.startDate <= loan.endDate && loan.startDate <= args.endDate;
+    });
+
+    if (conflictingLoan) {
+      throw new Error(
+        `This tool is already booked from ${conflictingLoan.startDate} to ${conflictingLoan.endDate}. Please choose an alternate date range.`
+      );
+    }
+
     // Fetch tool owner details for notification
     const owner = await ctx.db
       .query("users")

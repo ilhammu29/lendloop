@@ -54,6 +54,7 @@ export default defineSchema({
     category: toolCategoryValidator,
     condition: toolConditionValidator,
     description: v.string(),
+    imageUrl: v.optional(v.string()),
     status: toolStatusValidator,
     createdAt: v.number(),
     updatedAt: v.number(),

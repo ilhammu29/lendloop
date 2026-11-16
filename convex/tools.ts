@@ -9,7 +9,7 @@ import {
 /**
  * PUBLIC QUERY (Data Minimization applied):
  * Unauthenticated endpoint returning available tools.
- * Exposes ONLY tool name, category, and availability status.
+ * Exposes ONLY tool name, category, image preview, and availability status.
  * Intentionally hides owner identity, descriptions, and audit timestamps.
  */
 export const listPublicTools = query({
@@ -25,6 +25,7 @@ export const listPublicTools = query({
       _id: tool._id,
       name: tool.name,
       category: tool.category,
+      imageUrl: tool.imageUrl,
       status: tool.status,
     }));
   },
@@ -32,25 +33,29 @@ export const listPublicTools = query({
 
 /**
  * AUTHENTICATED QUERY:
- * Returns all tools with optional category filter.
+ * Returns all tools with optional category filter and sorting.
  * Includes condition, description, owner information, and owner's Trusted Lender status.
  */
 export const listAllTools = query({
   args: {
     category: v.optional(v.string()),
+    sortBy: v.optional(
+      v.union(v.literal("newest"), v.literal("name"), v.literal("available"))
+    ),
   },
   handler: async (ctx, args) => {
     await requireAuth(ctx);
 
     let toolsQuery = ctx.db.query("tools");
 
-    const tools = args.category && args.category !== "all"
-      ? await toolsQuery
-          .withIndex("by_category", (q) =>
-            q.eq("category", args.category as any)
-          )
-          .collect()
-      : await toolsQuery.collect();
+    const tools =
+      args.category && args.category !== "all"
+        ? await toolsQuery
+            .withIndex("by_category", (q) =>
+              q.eq("category", args.category as any)
+            )
+            .collect()
+        : await toolsQuery.collect();
 
     // Enrich with owner's Trusted Lender badge
     const enrichedTools = await Promise.all(
@@ -67,6 +72,19 @@ export const listAllTools = query({
       })
     );
 
+    // Apply sorting
+    if (args.sortBy === "name") {
+      return enrichedTools.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    if (args.sortBy === "available") {
+      return enrichedTools.sort((a, b) => {
+        if (a.status === "available" && b.status !== "available") return -1;
+        if (a.status !== "available" && b.status === "available") return 1;
+        return b.createdAt - a.createdAt;
+      });
+    }
+
+    // Default newest
     return enrichedTools.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
@@ -124,6 +142,7 @@ export const createTool = mutation({
     category: toolCategoryValidator,
     condition: toolConditionValidator,
     description: v.string(),
+    imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { identity, user } = await requireAuth(ctx);
@@ -144,6 +163,7 @@ export const createTool = mutation({
       category: args.category,
       condition: args.condition,
       description,
+      imageUrl: args.imageUrl?.trim() || undefined,
       status: "available",
       createdAt: now,
       updatedAt: now,
@@ -164,6 +184,7 @@ export const updateTool = mutation({
     category: toolCategoryValidator,
     condition: toolConditionValidator,
     description: v.string(),
+    imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { identity, user } = await requireAuth(ctx);
@@ -186,6 +207,7 @@ export const updateTool = mutation({
       category: args.category,
       condition: args.condition,
       description: args.description.trim(),
+      imageUrl: args.imageUrl?.trim() || undefined,
       updatedAt: now,
     });
 

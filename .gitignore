@@ -37,3 +37,9 @@ next-env.d.ts
 
 # n8n local data
 n8n_data/
+
+# Local agent skills cache
+.agents/
+.claude/
+skills-lock.json
+
