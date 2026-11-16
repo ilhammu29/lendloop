@@ -102,12 +102,12 @@ export default function RequestsPage() {
   ).length;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 md:pl-60">
       {/* Fixed Stationary Sidebar */}
       <AppSidebar />
 
-      {/* Main Content Area (Offset for desktop fixed sidebar) */}
-      <main className="md:pl-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Main Content Area (Safely positioned to the right of fixed sidebar) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
         
         {/* Header & Metrics Summary Bar */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
@@ -125,9 +125,9 @@ export default function RequestsPage() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-            <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200 text-center min-w-[95px]">
-              <span className="text-[10px] text-amber-700 font-semibold uppercase block">Pending</span>
-              <span className="text-base font-extrabold text-amber-900">{pendingIncoming}</span>
+            <div className="p-3 bg-slate-100/90 rounded-xl border border-slate-200 text-center min-w-[95px]">
+              <span className="text-[10px] text-slate-600 font-semibold uppercase block">Pending</span>
+              <span className="text-base font-extrabold text-slate-900">{pendingIncoming}</span>
             </div>
             <div className="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 text-center min-w-[95px]">
               <span className="text-[10px] text-emerald-700 font-semibold uppercase block">Active Loans</span>

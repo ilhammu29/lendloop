@@ -163,18 +163,18 @@ export default function AdminPage() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 md:pl-60">
       {/* Fixed Stationary Sidebar */}
       <AppSidebar />
 
-      {/* Main Content Area (Offset for desktop fixed sidebar) */}
-      <main className="md:pl-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Main Content Area (Safely positioned to the right of fixed sidebar) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
         
         {/* Top Header & Role Control Center */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-700 mb-1">
-              <Lock className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+              <Lock className="w-3.5 h-3.5 text-emerald-600" />
               Administrative Command Center
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -189,7 +189,7 @@ export default function AdminPage() {
             {/* Current Role Badge */}
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center min-w-[110px]">
               <span className="text-[10px] text-slate-400 font-semibold uppercase block">Your Role</span>
-              <span className={`text-xs font-extrabold uppercase ${isAdmin ? "text-purple-700" : "text-slate-700"}`}>
+              <span className={`text-xs font-extrabold uppercase ${isAdmin ? "text-emerald-700" : "text-slate-700"}`}>
                 {currentUser?.role || "USER"}
               </span>
             </div>
@@ -201,13 +201,13 @@ export default function AdminPage() {
               className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold transition-colors shadow-xs ${
                 isAdmin
                   ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
-                  : "bg-purple-600 hover:bg-purple-700 text-white"
+                  : "bg-slate-900 hover:bg-emerald-600 text-white"
               }`}
               title="Click to toggle your account between Admin and User mode for testing"
             >
               {isAdmin ? (
                 <>
-                  <ToggleRight className="w-4 h-4 text-purple-600" />
+                  <ToggleRight className="w-4 h-4 text-emerald-600" />
                   <span>Admin Mode Active (Click to Revert)</span>
                 </>
               ) : (
@@ -222,12 +222,12 @@ export default function AdminPage() {
 
         {/* Evaluator Helper Banner if not admin */}
         {!isAdmin && (
-          <div className="p-4 bg-purple-50/80 border border-purple-200 rounded-2xl flex items-start gap-3.5 text-xs text-purple-900">
-            <ShieldAlert className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+          <div className="p-4 bg-slate-100 border border-slate-200 rounded-2xl flex items-start gap-3.5 text-xs text-slate-900">
+            <ShieldAlert className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <strong className="font-bold text-sm block">Evaluator Demonstration Notice</strong>
-              <p className="text-purple-700 leading-relaxed">
-                You are currently in standard <strong>User</strong> mode. You can test the <strong>n8n Webhook & Idempotency Simulator</strong> and public equipment below immediately. To inspect all registered users, promote members, or administratively delete tools, click the <strong>"Claim Admin Access"</strong> button above!
+              <p className="text-slate-600 leading-relaxed">
+                You are currently in standard <strong>User</strong> mode. You can test the <strong>n8n Webhook &amp; Idempotency Simulator</strong> and public equipment below immediately. To inspect all registered users, promote members, or administratively delete tools, click the <strong>&quot;Claim Admin Access&quot;</strong> button above!
               </p>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function AdminPage() {
                 </p>
                 <button
                   onClick={handleToggleAdminMode}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs"
+                  className="px-4 py-2 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
                 >
                   Enable Admin Mode
                 </button>
@@ -347,7 +347,7 @@ export default function AdminPage() {
                             <span
                               className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
                                 u.role === "admin"
-                                  ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                  ? "bg-slate-900 text-white"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
@@ -481,7 +481,7 @@ export default function AdminPage() {
                 </p>
                 <button
                   onClick={handleToggleAdminMode}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs"
+                  className="px-4 py-2 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
                 >
                   Enable Admin Mode
                 </button>

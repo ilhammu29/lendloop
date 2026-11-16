@@ -150,12 +150,12 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 md:pl-60">
       {/* Fixed Stationary Sidebar */}
       <AppSidebar onOpenCreateTool={() => setCreateModalOpen(true)} />
 
-      {/* Main Content Area (Offset for desktop fixed sidebar) */}
-      <main className="md:pl-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Main Content Area (Safely positioned to the right of fixed sidebar) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
         
         {/* Top Header & Metrics Bar */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
