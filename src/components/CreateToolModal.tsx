@@ -96,6 +96,9 @@ export default function CreateToolModal({
     reader.onloadend = () => {
       setImageUrl(reader.result as string);
     };
+    reader.onerror = () => {
+      setError("Failed to read image file from disk. Please choose another image.");
+    };
     reader.readAsDataURL(file);
   };
 

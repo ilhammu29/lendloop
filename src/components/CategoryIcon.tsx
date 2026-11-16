@@ -38,7 +38,7 @@ export default function CategoryIcon({
     case "power tools":
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-amber-500/10 text-amber-600 border border-amber-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-slate-100 text-slate-900 border border-slate-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <Wrench className={iconSizeMap[size]} />
         </div>
@@ -46,7 +46,7 @@ export default function CategoryIcon({
     case "garden":
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <Sprout className={iconSizeMap[size]} />
         </div>
@@ -54,7 +54,7 @@ export default function CategoryIcon({
     case "kitchen":
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <UtensilsCrossed className={iconSizeMap[size]} />
         </div>
@@ -62,7 +62,7 @@ export default function CategoryIcon({
     case "camping":
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-teal-500/10 text-teal-600 border border-teal-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <Tent className={iconSizeMap[size]} />
         </div>
@@ -70,7 +70,7 @@ export default function CategoryIcon({
     case "woodworking":
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-orange-500/10 text-orange-600 border border-orange-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-slate-100 text-slate-900 border border-slate-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <Hammer className={iconSizeMap[size]} />
         </div>
@@ -78,7 +78,7 @@ export default function CategoryIcon({
     case "automotive":
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-slate-100 text-slate-900 border border-slate-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <Car className={iconSizeMap[size]} />
         </div>
@@ -86,7 +86,7 @@ export default function CategoryIcon({
     default:
       return (
         <div
-          className={`${sizeMap[size]} rounded-xl bg-slate-500/10 text-slate-600 border border-slate-500/20 flex items-center justify-center shrink-0 ${className}`}
+          className={`${sizeMap[size]} rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center shrink-0 ${className}`}
         >
           <Package className={iconSizeMap[size]} />
         </div>

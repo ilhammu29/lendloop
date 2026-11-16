@@ -48,8 +48,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ toast: toastMethods }}>
       {children}
 
-      {/* Floating Toast Viewport */}
-      <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+      {/* Floating Toast Viewport (Placed at top right to avoid colliding with mobile navigation FAB) */}
+      <div className="fixed top-20 right-4 sm:top-5 sm:right-5 z-[100] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
         {toasts.map((t) => (
           <div
             key={t.id}

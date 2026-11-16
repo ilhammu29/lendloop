@@ -22,27 +22,6 @@ export default function RootLayout({
           <ToastProvider>
             <Navbar />
             <main className="flex-grow">{children}</main>
-            <footer className="bg-white border-t border-slate-200 py-6 text-xs text-slate-500">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p>
-                  © {new Date().getFullYear()} <strong className="text-slate-800">LendLoop</strong>. Borrow what you need. Lend what you don’t.
-                </p>
-                <div className="flex items-center gap-6 text-slate-600 font-medium">
-                  <a href="/dashboard" className="hover:text-slate-900 transition-colors">
-                    Catalog
-                  </a>
-                  <a href="/requests" className="hover:text-slate-900 transition-colors">
-                    Requests
-                  </a>
-                  <a href="/admin" className="hover:text-slate-900 transition-colors">
-                    Admin
-                  </a>
-                </div>
-                <p className="text-slate-400">
-                  Engineered for Fluence with Next.js App Router, Clerk, Convex & n8n
-                </p>
-              </div>
-            </footer>
           </ToastProvider>
         </ConvexClientProvider>
       </body>

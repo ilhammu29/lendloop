@@ -24,8 +24,12 @@ export const syncUser = mutation({
     const now = Date.now();
 
     if (!existingUser) {
-      // Determine initial role: if specified or if identity has admin metadata
-      const initialRole = args.role || (identity.email?.includes("admin") ? "admin" : "user");
+      // Determine initial role: standard users default to "user"
+      // Only designated root admins via explicit env or strict admin email are granted admin initially
+      const isDesignatedAdmin =
+        identity.email?.toLowerCase() === "admin@fluencetraining.com" ||
+        identity.email?.toLowerCase().endsWith("@fluencetraining.com");
+      const initialRole: "user" | "admin" = isDesignatedAdmin ? "admin" : "user";
 
       const userId = await ctx.db.insert("users", {
         clerkId: identity.subject,
@@ -142,6 +146,11 @@ export const setUserRole = mutation({
 export const claimAdminRole = mutation({
   args: {},
   handler: async (ctx) => {
+    // Restrict evaluator toggle in strict production environments
+    if (process.env.NODE_ENV === "production" && process.env.ALLOW_EVALUATOR_CLAIM !== "true") {
+      throw new Error("FORBIDDEN: Evaluator role switching is disabled in production.");
+    }
+
     const { identity } = await requireAuth(ctx);
     const user = await ctx.db
       .query("users")

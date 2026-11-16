@@ -43,6 +43,11 @@ export const requestBorrow = mutation({
       throw new Error("Borrow start date cannot be after return date.");
     }
 
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (args.startDate < todayStr) {
+      throw new Error("Borrow start date cannot be in the past.");
+    }
+
     // Date Conflict Validation: Ensure tool is not already booked during this window
     const existingApprovedLoans = await ctx.db
       .query("loans")
@@ -166,6 +171,25 @@ export const respondToLoanRequest = mutation({
       throw new Error(`This request has already been ${loan.status}.`);
     }
 
+    // Double-Booking Race Condition Prevention at Approval Time:
+    if (args.action === "approve") {
+      const activeApproved = await ctx.db
+        .query("loans")
+        .withIndex("by_tool", (q) => q.eq("toolId", loan.toolId))
+        .filter((q) => q.eq(q.field("status"), "approved"))
+        .collect();
+
+      const hasConflict = activeApproved.some(
+        (l) => loan.startDate <= l.endDate && l.startDate <= loan.endDate
+      );
+
+      if (hasConflict) {
+        throw new Error(
+          "Cannot approve request: This equipment already has an approved booking overlapping these dates."
+        );
+      }
+    }
+
     const now = Date.now();
     const newStatus = args.action === "approve" ? "approved" : "declined";
 
@@ -225,6 +249,10 @@ export const markLoanReturned = mutation({
 
     if (loan.status === "returned") {
       return { success: true, message: "Loan already marked as returned." };
+    }
+
+    if (loan.status !== "approved") {
+      throw new Error(`Invalid state transition: Cannot mark a '${loan.status}' loan as returned. Only active approved loans can be returned.`);
     }
 
     const now = Date.now();
