@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LendLoop — Linear Obsidian & Emerald Precision</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: {
+              DEFAULT: '#090d16',
+              surface: '#0f172a',
+              card: '#131e32',
+              cardHover: '#18263f',
+              border: '#1e293b',
+              borderLight: '#334155',
+            },
+            emerald: {
+              accent: '#10b981',
+              glow: 'rgba(16, 185, 129, 0.2)',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          spacing: {
+            '1': '4px',
+            '2': '8px',
+            '3': '12px',
+            '4': '16px',
+            '5': '20px',
+            '6': '24px',
+            '8': '32px',
+            '10': '40px',
+            '12': '48px',
+            '16': '64px',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(0.5deg); }
+    }
+    @keyframes floatMedium {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(-0.5deg); }
+    }
+    .animate-float-1 { animation: floatSlow 6s ease-in-out infinite; }
+    .animate-float-2 { animation: floatMedium 4.5s ease-in-out infinite; }
+    .perspective-1000 { perspective: 1000px; }
+  </style>
+</head>
+<body class="bg-obsidian text-slate-100 font-sans min-h-screen flex flex-col selection:bg-emerald-accent/20 selection:text-emerald-400">
+
+  <!-- Top Glassmorphic Navigation -->
+  <header class="sticky top-0 z-40 bg-obsidian/90 backdrop-blur-md border-b border-obsidian-border h-16 flex items-center px-4 sm:px-6 justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-emerald-accent flex items-center justify-center text-slate-950 font-black shadow-sm">
+        <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <div>
+        <span class="text-base font-bold text-white tracking-tight">LendLoop</span>
+        <span class="hidden sm:inline-block text-[10px] text-slate-400 font-mono ml-2 border-l border-slate-700 pl-2">PRECISION SHED</span>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Badges -->
+    <div class="hidden md:flex items-center gap-3 text-xs">
+      <div class="px-3 py-1 rounded-md bg-obsidian-surface border border-obsidian-border flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-accent"></span>
+        <span class="text-slate-300 font-medium">Realtime Subscriptions</span>
+      </div>
+      <div class="px-3 py-1 rounded-md bg-obsidian-surface border border-obsidian-border flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+        <span class="text-slate-300 font-medium">HMAC Signed Webhooks</span>
+      </div>
+    </div>
+
+    <!-- Actions & User Profile -->
+    <div class="flex items-center gap-3">
+      <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-emerald-accent text-slate-950 hover:bg-emerald-400 font-bold text-xs transition-colors shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span class="hidden sm:inline">Add Equipment</span>
+      </button>
+      <div class="w-8 h-8 rounded-full bg-obsidian-surface border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200">
+        ED
+      </div>
+    </div>
+  </header>
+
+  <!-- App Layout: Sidebar + Main Stage -->
+  <div class="flex-1 flex flex-col md:flex-row">
+    
+    <!-- Collapsible Icon Sidebar -->
+    <aside id="sidebar" class="hidden md:flex flex-col justify-between w-16 hover:w-60 bg-obsidian-surface border-r border-obsidian-border py-6 px-2.5 transition-all duration-300 group z-30 shrink-0 sticky top-16 h-[calc(100vh-4rem)]">
+      <div class="space-y-4">
+        <nav class="space-y-1.5">
+          <a href="#catalog" class="flex items-center rounded-xl p-2.5 bg-obsidian-card text-emerald-accent border border-obsidian-border gap-3 text-xs font-semibold group/item">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+            <span class="hidden group-hover:inline truncate">Browse Equipment</span>
+          </a>
+
+          <a href="#activity" class="flex items-center rounded-xl p-2.5 text-slate-400 hover:text-white hover:bg-obsidian-card gap-3 text-xs font-semibold transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span class="hidden group-hover:inline truncate">Loan Activity</span>
+          </a>
+
+          <a href="#inventory" class="flex items-center rounded-xl p-2.5 text-slate-400 hover:text-white hover:bg-obsidian-card gap-3 text-xs font-semibold transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+            <span class="hidden group-hover:inline truncate">My Shared Gear</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="border-t border-obsidian-border pt-3">
+        <div class="flex items-center gap-3 p-2 rounded-xl bg-obsidian-card/60">
+          <div class="w-7 h-7 rounded-lg bg-emerald-accent/20 text-emerald-accent flex items-center justify-center font-bold text-xs shrink-0">
+            ✓
+          </div>
+          <div class="hidden group-hover:block min-w-0">
+            <div class="text-[11px] font-bold text-white truncate">Verified Member</div>
+            <div class="text-[10px] text-slate-400 font-mono">ID: LN-8842</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      
+      <!-- Parallax Hero Section with Interactive Card -->
+      <section id="hero" class="relative rounded-2xl bg-gradient-to-b from-obsidian-surface to-obsidian border border-obsidian-border p-6 sm:p-10 overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+          
+          <div class="lg:col-span-7 space-y-5">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-obsidian border border-slate-700 text-xs font-mono text-emerald-accent">
+              <span class="w-2 h-2 rounded-full bg-emerald-accent animate-pulse"></span>
+              CIRCULAR NEIGHBORHOOD SYSTEM
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.15]">
+              Borrow what you need.
+              <span class="block text-slate-400 font-medium mt-1">Lend what you don't.</span>
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-400 max-w-lg leading-relaxed">
+              LendLoop coordinates neighborhood hardware sharing with zero privacy leaks. Verified community members share drills, mowers, and camping gear with cryptographic HMAC verification and automated n8n return crons.
+            </p>
+
+            <div class="pt-2 flex flex-wrap gap-3">
+              <button onclick="document.getElementById('catalog').scrollIntoView({behavior: 'smooth'})" class="px-5 py-2.5 rounded-lg bg-emerald-accent text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-sm">
+                Explore Equipment Catalog
+              </button>
+              <button onclick="openCreateModal()" class="px-5 py-2.5 rounded-lg bg-obsidian-surface hover:bg-obsidian-card text-slate-300 hover:text-white border border-obsidian-border font-semibold text-xs transition-colors">
+                List Equipment +
+              </button>
+            </div>
+          </div>
+
+          <!-- Parallax Floating 3D Showcase Card -->
+          <div class="lg:col-span-5 relative perspective-1000 flex items-center justify-center">
+            <div id="parallaxCard" class="w-full max-w-sm bg-obsidian-card border border-obsidian-border rounded-2xl p-5 shadow-2xl space-y-4 transition-transform duration-300 ease-out">
+              <div class="flex items-center justify-between pb-3 border-b border-obsidian-border">
+                <div>
+                  <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Featured Asset</span>
+                  <h4 class="text-sm font-bold text-white">DeWalt 20V Max Hammer Drill</h4>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-accent border border-emerald-500/30">
+                  Ready
+                </span>
+              </div>
+
+              <!-- SVG Technical Blueprint Illustration -->
+              <div class="h-40 rounded-xl bg-obsidian-surface border border-obsidian-border/80 flex items-center justify-center p-4 relative overflow-hidden">
+                <svg class="w-24 h-24 text-emerald-accent/80" viewBox="0 0 64 64" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 28h16l8-12h12v12h4l2 6v6h-6v16h-8V40H20v16h-8V28z"/>
+                  <circle cx="48" cy="22" r="3" fill="currentColor"/>
+                  <path stroke-width="1.5" stroke-dasharray="2 2" d="M12 34h40"/>
+                </svg>
+                <div class="absolute bottom-2 left-2 text-[10px] font-mono text-slate-400">
+                  SERIAL: #DW-88219-X
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="p-2 rounded-lg bg-obsidian-surface border border-obsidian-border">
+                  <span class="text-[10px] text-slate-400 block font-medium">Condition</span>
+                  <span class="font-bold text-white">Like New</span>
+                </div>
+                <div class="p-2 rounded-lg bg-obsidian-surface border border-obsidian-border">
+                  <span class="text-[10px] text-slate-400 block font-medium">Zero PII Status</span>
+                  <span class="font-bold text-emerald-accent">Masked</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating Badge 1 -->
+            <div class="absolute -top-3 -left-4 bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-1.5 shadow-xl hidden sm:flex items-center gap-2 text-[11px] font-semibold text-slate-200 animate-float-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-accent"></span>
+              n8n Overdue Cron: Armed
+            </div>
+
+            <!-- Floating Badge 2 -->
+            <div class="absolute -bottom-3 -right-4 bg-obsidian border border-slate-700 rounded-xl px-3 py-1.5 shadow-xl hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-300 animate-float-2">
+              <span class="text-emerald-accent">#</span> HMAC-SHA256 Nonce Safe
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Equipment Catalog Grid -->
+      <section id="catalog" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Active Community Inventory</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Click any piece of equipment to inspect technical specs, borrower guidelines, or initiate a loan request.</p>
+          </div>
+
+          <!-- Category Filters -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <button onclick="filterCategory('all')" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-accent text-slate-950 transition-colors">All Equipment</button>
+            <button onclick="filterCategory('Power Tools')" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-obsidian-card hover:bg-obsidian-surface text-slate-300 border border-obsidian-border transition-colors">Power Tools</button>
+            <button onclick="filterCategory('Garden')" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-obsidian-card hover:bg-obsidian-surface text-slate-300 border border-obsidian-border transition-colors">Garden</button>
+            <button onclick="filterCategory('Cleaning')" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-obsidian-card hover:bg-obsidian-surface text-slate-300 border border-obsidian-border transition-colors">Cleaning</button>
+            <button onclick="filterCategory('Camping')" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-obsidian-card hover:bg-obsidian-surface text-slate-300 border border-obsidian-border transition-colors">Camping</button>
+          </div>
+        </div>
+
+        <!-- Tool Cards Grid -->
+        <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Populated by JavaScript -->
+        </div>
+      </section>
+
+      <!-- System Architecture & Trust Matrix -->
+      <section id="activity" class="border-t border-obsidian-border pt-10 space-y-6">
+        <div>
+          <h3 class="text-lg font-bold text-white tracking-tight">Zero-Trust Neighborhood Sharing Architecture</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Engineered to eliminate chat-group chaos, privacy leakages, and awkward neighbor reminders.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="p-5 rounded-xl bg-obsidian-surface border border-obsidian-border space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-accent flex items-center justify-center font-bold">
+              01
+            </div>
+            <h4 class="font-bold text-white text-sm">Public Data Minimization</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Public listings only expose tool names and categories. Homeowner addresses and contact information remain locked in Convex until borrow approval.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-xl bg-obsidian-surface border border-obsidian-border space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-accent flex items-center justify-center font-bold">
+              02
+            </div>
+            <h4 class="font-bold text-white text-sm">Idempotent n8n Reminder Crons</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Scheduled daily jobs detect overdue items. Reminders generate deterministic keys (`overdue-{id}-{date}`) so network retries never spam neighbors.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-xl bg-obsidian-surface border border-obsidian-border space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-accent flex items-center justify-center font-bold">
+              03
+            </div>
+            <h4 class="font-bold text-white text-sm">HMAC Non-Repudiation</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Inter-service webhooks between Next.js, Convex, and self-hosted n8n instances are verified cryptographically with timing-safe string comparison.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-obsidian-border py-6 px-4 sm:px-6 bg-obsidian text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div>
+      <strong class="text-slate-300">LendLoop</strong> — High-Trust Community Equipment Protocol.
+    </div>
+    <div class="flex items-center gap-6 text-slate-400">
+      <span>Built for Fluence Technical Assessment</span>
+      <span>•</span>
+      <span class="font-mono text-emerald-accent">HMAC: OK</span>
+    </div>
+  </footer>
+
+  <!-- Tool Detail Modal -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-obsidian/80 backdrop-blur-sm">
+    <div class="bg-obsidian-surface border border-obsidian-border rounded-2xl w-full max-w-xl p-6 shadow-2xl relative space-y-5 animate-in fade-in">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+        ✕
+      </button>
+
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span id="modalCat" class="text-[10px] font-mono uppercase tracking-wider text-emerald-accent px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">Power Tools</span>
+          <span id="modalCond" class="text-[10px] font-medium text-slate-300 px-2 py-0.5 rounded bg-obsidian-card border border-obsidian-border">Good Condition</span>
+        </div>
+        <h3 id="modalTitle" class="text-xl font-bold text-white">Tool Name</h3>
+      </div>
+
+      <div id="modalImageArea" class="h-44 rounded-xl bg-obsidian-card border border-obsidian-border flex items-center justify-center overflow-hidden">
+        <!-- Image or SVG rendered by JS -->
+      </div>
+
+      <div class="bg-obsidian-card p-4 rounded-xl border border-obsidian-border space-y-1">
+        <h5 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Borrower Guidelines</h5>
+        <p id="modalDesc" class="text-xs text-slate-300 leading-relaxed">Instructions go here...</p>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-obsidian-border">
+        <span class="text-xs text-slate-400">Zero-Trust Protected</span>
+        <button onclick="alert('Loan request initiated! Simulated HMAC webhook dispatched.'); closeDetailModal();" class="px-5 py-2.5 rounded-lg bg-emerald-accent text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors">
+          Request to Borrow Equipment
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Tool Modal with Local FileReader Upload -->
+  <div id="createModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-obsidian/80 backdrop-blur-sm">
+    <div class="bg-obsidian-surface border border-obsidian-border rounded-2xl w-full max-w-lg p-6 shadow-2xl relative space-y-4">
+      <button onclick="closeCreateModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-accent flex items-center justify-center font-bold">
+          +
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">List Equipment for Lending</h3>
+          <p class="text-xs text-slate-400">Share idle gear with verified neighborhood residents.</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleCreateTool(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Equipment Name *</label>
+          <input id="inputName" type="text" placeholder="e.g. Bosch Professional SDS Hammer Drill" required class="w-full px-3.5 py-2 rounded-lg bg-obsidian-card border border-obsidian-border text-white focus:outline-none focus:border-emerald-accent">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Category *</label>
+            <select id="inputCat" class="w-full px-3 py-2 rounded-lg bg-obsidian-card border border-obsidian-border text-white focus:outline-none focus:border-emerald-accent">
+              <option value="Power Tools">Power Tools</option>
+              <option value="Garden">Garden</option>
+              <option value="Cleaning">Cleaning</option>
+              <option value="Camping">Camping</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Condition *</label>
+            <select id="inputCond" class="w-full px-3 py-2 rounded-lg bg-obsidian-card border border-obsidian-border text-white focus:outline-none focus:border-emerald-accent">
+              <option value="Brand New">Brand New</option>
+              <option value="Like New">Like New</option>
+              <option value="Good Condition">Good Condition</option>
+              <option value="Fair / Used">Fair / Used</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Local Image File Upload Area -->
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Equipment Photo (Local File Upload)</label>
+          <input type="file" id="inputFile" accept="image/*" onchange="previewLocalImage(event)" class="hidden">
+          
+          <div id="dropZone" onclick="document.getElementById('inputFile').click()" class="border-2 border-dashed border-obsidian-border hover:border-emerald-accent rounded-xl p-4 text-center cursor-pointer transition-colors bg-obsidian-card/50">
+            <div id="uploadPrompt" class="space-y-1">
+              <svg class="w-6 h-6 text-slate-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <span class="text-xs font-semibold text-slate-300 block">Click to upload image from local device</span>
+              <span class="text-[10px] text-slate-500 block">PNG, JPG, or WEBP up to 2MB</span>
+            </div>
+            
+            <div id="uploadPreview" class="hidden items-center justify-between gap-3">
+              <img id="previewImg" src="" alt="Uploaded" class="w-14 h-14 object-cover rounded-lg border border-slate-700">
+              <div class="text-left flex-1 min-w-0">
+                <span id="previewName" class="text-xs font-semibold text-white block truncate">file.png</span>
+                <span class="text-[10px] text-emerald-accent block">✓ Ready to save</span>
+              </div>
+              <button type="button" onclick="event.stopPropagation(); removeUploadedImage();" class="text-xs text-rose-400 hover:text-rose-300">
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Borrower Guidelines</label>
+          <textarea id="inputDesc" rows="2" placeholder="Battery status, accessories included, or pickup notes..." class="w-full px-3 py-2 rounded-lg bg-obsidian-card border border-obsidian-border text-white focus:outline-none focus:border-emerald-accent"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeCreateModal()" class="px-4 py-2 font-semibold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-accent text-slate-950 font-bold hover:bg-emerald-400 transition-colors">Publish Equipment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Interactive JavaScript Logic -->
+  <script>
+    let currentUploadedDataUrl = "";
+
+    const INITIAL_TOOLS = [
+      {
+        id: "tool_1",
+        name: "DeWalt 20V Max Hammer Drill",
+        category: "Power Tools",
+        condition: "Like New",
+        status: "available",
+        owner: "David Miller",
+        desc: "High-power brushless hammer drill with two 4.0Ah batteries, fast charger, and masonry drill bit set. Please return clean and recharged.",
+      },
+      {
+        id: "tool_2",
+        name: "Kärcher K4 Pressure Washer",
+        category: "Cleaning",
+        condition: "Good Condition",
+        status: "available",
+        owner: "Sarah Jenkins",
+        desc: "1800 PSI electric pressure washer suitable for driveways, siding, and car washing. Includes turbo nozzle and foam cannon attachment.",
+      },
+      {
+        id: "tool_3",
+        name: "Honda HRX217 Self-Propelled Mower",
+        category: "Garden",
+        condition: "Good Condition",
+        status: "available",
+        owner: "Marcus Vance",
+        desc: "21-inch gas lawn mower with Versamow mulching system. Full tank of gas provided; please return with full unleaded fuel.",
+      },
+      {
+        id: "tool_4",
+        name: "Makita 10-Inch Compound Miter Saw",
+        category: "Power Tools",
+        condition: "Brand New",
+        status: "available",
+        owner: "Elena Rostova",
+        desc: "Dual-bevel sliding compound miter saw with precision laser guide. Ideal for baseboard trim and framing projects.",
+      },
+      {
+        id: "tool_5",
+        name: "Coleman 6-Person WeatherMaster Tent",
+        category: "Camping",
+        condition: "Like New",
+        status: "available",
+        owner: "Tom Bradley",
+        desc: "Spacious waterproof dome tent with screen room. Please inspect stakes and ensure fabric is fully dry before packing.",
+      },
+      {
+        id: "tool_6",
+        name: "Werner 22-Foot Multi-Position Ladder",
+        category: "Power Tools",
+        condition: "Good Condition",
+        status: "available",
+        owner: "Robert Chen",
+        desc: "Telescoping aluminum ladder convertible into stepladder, extension ladder, and scaffold base. Rated for 300 lbs.",
+      }
+    ];
+
+    let toolsState = [...INITIAL_TOOLS];
+
+    function renderTools(filter = "all") {
+      const grid = document.getElementById("toolsGrid");
+      grid.innerHTML = "";
+
+      const filtered = filter === "all" ? toolsState : toolsState.filter(t => t.category === filter);
+
+      filtered.forEach(tool => {
+        const card = document.createElement("div");
+        card.className = "bg-obsidian-surface border border-obsidian-border rounded-xl p-5 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 shadow-xs hover:shadow-md";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-accent px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">${tool.category}</span>
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold text-emerald-accent bg-emerald-500/10 border border-emerald-500/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-accent"></span> Available
+              </span>
+            </div>
+            <h4 onclick="openDetailModal('${tool.id}')" class="text-base font-bold text-white hover:text-emerald-accent cursor-pointer transition-colors line-clamp-1">${tool.name}</h4>
+            <p class="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">${tool.desc}</p>
+          </div>
+          
+          <div class="pt-3 border-t border-obsidian-border flex items-center justify-between text-xs">
+            <span class="text-slate-500 font-mono text-[10px]">Lender: ${tool.owner}</span>
+            <button onclick="openDetailModal('${tool.id}')" class="font-bold text-emerald-accent hover:text-emerald-400 transition-colors">
+              Inspect & Borrow &rarr;
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.className = "cat-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-obsidian-card hover:bg-obsidian-surface text-slate-300 border border-obsidian-border transition-colors";
+      });
+      event.target.className = "cat-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-accent text-slate-950 transition-colors";
+      renderTools(cat);
+    }
+
+    function openDetailModal(toolId) {
+      const tool = toolsState.find(t => t.id === toolId);
+      if (!tool) return;
+
+      document.getElementById("modalTitle").innerText = tool.name;
+      document.getElementById("modalCat").innerText = tool.category;
+      document.getElementById("modalCond").innerText = tool.condition;
+      document.getElementById("modalDesc").innerText = tool.desc;
+
+      const imgArea = document.getElementById("modalImageArea");
+      if (tool.imageUrl) {
+        imgArea.innerHTML = `<img src="${tool.imageUrl}" class="w-full h-full object-cover">`;
+      } else {
+        imgArea.innerHTML = `
+          <div class="text-center space-y-1">
+            <span class="text-2xl text-emerald-accent">⚙</span>
+            <span class="text-xs text-slate-400 block font-mono">${tool.category} Verified Asset</span>
+          </div>
+        `;
+      }
+
+      const modal = document.getElementById("detailModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById("detailModal");
+      modal.classList.remove("flex");
+      modal.classList.add("hidden");
+    }
+
+    function openCreateModal() {
+      const modal = document.getElementById("createModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeCreateModal() {
+      const modal = document.getElementById("createModal");
+      modal.classList.remove("flex");
+      modal.classList.add("hidden");
+    }
+
+    function previewLocalImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        currentUploadedDataUrl = evt.target.result;
+        document.getElementById("uploadPrompt").classList.add("hidden");
+        const preview = document.getElementById("uploadPreview");
+        preview.classList.remove("hidden");
+        preview.classList.add("flex");
+        document.getElementById("previewImg").src = currentUploadedDataUrl;
+        document.getElementById("previewName").innerText = file.name;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeUploadedImage() {
+      currentUploadedDataUrl = "";
+      document.getElementById("inputFile").value = "";
+      document.getElementById("uploadPrompt").classList.remove("hidden");
+      const preview = document.getElementById("uploadPreview");
+      preview.classList.remove("flex");
+      preview.classList.add("hidden");
+    }
+
+    function handleCreateTool(e) {
+      e.preventDefault();
+      const name = document.getElementById("inputName").value;
+      const cat = document.getElementById("inputCat").value;
+      const cond = document.getElementById("inputCond").value;
+      const desc = document.getElementById("inputDesc").value;
+
+      const newTool = {
+        id: "tool_" + Date.now(),
+        name,
+        category: cat,
+        condition: cond,
+        status: "available",
+        owner: "Current Resident",
+        desc: desc || "Recently added neighborhood equipment ready for community sharing.",
+        imageUrl: currentUploadedDataUrl || undefined,
+      };
+
+      toolsState.unshift(newTool);
+      renderTools();
+      closeCreateModal();
+      removeUploadedImage();
+      document.getElementById("inputName").value = "";
+      document.getElementById("inputDesc").value = "";
+      alert(`"${name}" has been published to the neighborhood shed!`);
+    }
+
+    // Parallax Mouse Effect on Hero Card
+    window.addEventListener("mousemove", (e) => {
+      const card = document.getElementById("parallaxCard");
+      if (!card) return;
+      const x = (e.clientX / window.innerWidth - 0.5) * 16;
+      const y = (e.clientY / window.innerHeight - 0.5) * 16;
+      card.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+    });
+
+    // Initialize tools on page load
+    renderTools();
+  </script>
+</body>
+</html>

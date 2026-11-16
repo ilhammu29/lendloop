@@ -43,11 +43,13 @@ export interface LoanItem {
   toolId: string;
   toolName: string;
   lenderId: string;
+  ownerName?: string;
   borrowerId: string;
   borrowerName: string;
   borrowerEmail: string;
   startDate: string;
   endDate: string;
+  notes?: string;
   status: LoanStatus;
   lastReminderSentAt?: number;
   reminderCount?: number;

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import CategoryIcon from "../components/CategoryIcon";
+import ToolDetailModal from "../components/ToolDetailModal";
+import { ToolItem } from "../types";
 import {
   Wrench,
   ShieldCheck,
@@ -14,6 +16,12 @@ import {
   Search,
   Check,
   X,
+  Eye,
+  Sparkles,
+  ArrowRight,
+  Layers,
+  Calendar,
+  Share2,
 } from "lucide-react";
 
 export default function PublicLandingPage() {
@@ -21,6 +29,22 @@ export default function PublicLandingPage() {
   const publicTools = useQuery(api.tools?.listPublicTools || ({} as any));
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [detailModalTool, setDetailModalTool] = useState<ToolItem | null>(null);
+
+  // Parallax subtle mouse tracking state
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const { innerWidth, innerHeight } = window;
+      const x = (e.clientX / innerWidth - 0.5) * 15;
+      const y = (e.clientY / innerHeight - 0.5) * 15;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   const categories = [
     "All",
@@ -44,112 +68,148 @@ export default function PublicLandingPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-slate-900">
-      {/* Hero Section */}
-      <section className="border-b border-slate-200/80 bg-white py-16 sm:py-20 lg:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-slate-900 overflow-x-hidden">
+      {/* Modern Parallax Hero Section */}
+      <section className="relative border-b border-slate-200/80 bg-white py-16 sm:py-24 lg:py-28 overflow-hidden">
+        {/* Subtle geometric background accents */}
+        <div
+          className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-50/50 pointer-events-none transition-transform duration-700 ease-out"
+          style={{
+            transform: `translate3d(${mousePos.x * 0.8}px, ${mousePos.y * 0.8}px, 0)`,
+          }}
+        ></div>
+        <div
+          className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-slate-100/60 pointer-events-none transition-transform duration-700 ease-out"
+          style={{
+            transform: `translate3d(${-mousePos.x * 0.5}px, ${-mousePos.y * 0.5}px, 0)`,
+          }}
+        ></div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
             {/* Left Column: Proposition */}
             <div className="lg:col-span-7 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+                <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                Neighborhood Tool-Lending Network
+              </div>
+
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950 leading-[1.12]">
-                Pinjam alat tetangga.
-                <span className="block text-slate-500 font-normal mt-1 text-3xl sm:text-4xl lg:text-5xl">
-                  Bagikan apa yang tersimpan di garasi.
+                Borrow tools from neighbors.
+                <span className="block text-slate-500 font-normal mt-1.5 text-3xl sm:text-4xl lg:text-5xl">
+                  Lend what sits in your garage.
                 </span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 max-w-xl leading-relaxed">
-                LendLoop mengorganisir peminjaman perkakas dan perlengkapan rumah
-                tangga antar warga sekitar. Dilengkapi perlindungan privasi data
-                dan pengingat pengembalian otomatis berjadwal.
+                LendLoop coordinates neighborhood equipment sharing with zero
+                privacy leaks. Community members share power tools, lawn mowers,
+                and camping gear safely, backed by automated n8n return workflows.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 {isSignedIn ? (
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs"
                   >
-                    Buka Gudang Komunitas
+                    Enter Community Shed
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                 ) : (
                   <SignInButton mode="modal">
-                    <button className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                      Masuk & Pinjam Alat
+                    <button className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs">
+                      Sign In & Borrow Tools
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                   </SignInButton>
                 )}
 
                 <a
-                  href="#katalog"
-                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 transition-colors"
+                  href="#catalog"
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 transition-colors"
                 >
-                  Lihat Inventaris Publik
+                  Explore Public Inventory
                 </a>
               </div>
             </div>
 
-            {/* Right Column: Architectural Highlights Card */}
-            <div className="lg:col-span-5">
-              <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-6 space-y-5">
-                <div className="border-b border-slate-200 pb-3.5">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Spesifikasi Keamanan & Privasi
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Standar keandalan untuk ekosistem pinjam-meminjam warga
-                  </p>
+            {/* Right Column: Layered Parallax Equipment Visual */}
+            <div className="lg:col-span-5 relative perspective-1000">
+              {/* Primary Surface Card */}
+              <div
+                className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xl relative transition-transform duration-500 ease-out transform-style-3d hover:shadow-2xl"
+                style={{
+                  transform: `rotateY(${mousePos.x * 0.4}deg) rotateX(${-mousePos.y * 0.4}deg)`,
+                }}
+              >
+                <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Live Equipment Showcase
+                    </h3>
+                    <div className="text-sm font-bold text-slate-900 mt-0.5">
+                      DeWalt 20V Cordless Hammer Drill
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                    Available
+                  </span>
                 </div>
 
-                <div className="space-y-4 text-xs text-slate-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-md bg-emerald-100/80 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-900 block">
-                        Data Minimization Publik
-                      </span>
-                      <span className="text-slate-500 text-[11px] leading-normal">
-                        Katalog terbuka hanya menampilkan nama dan kategori alat.
-                        Identitas dan nomor kontak pemilik disembunyikan hingga
-                        peminjaman disetujui.
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-md bg-slate-200 text-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
-                      <Clock className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-900 block">
-                        Otomasi Pengingat n8n
-                      </span>
-                      <span className="text-slate-500 text-[11px] leading-normal">
-                        Cron harian mendeteksi pinjaman jatuh tempo dan
-                        mengirimkan pengingat sopan berjadwal dengan proteksi
-                        kunci idempoten.
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-md bg-slate-200 text-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
-                      <Lock className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-900 block">
-                        Tanda Tangan Kriptografis HMAC-SHA256
-                      </span>
-                      <span className="text-slate-500 text-[11px] leading-normal">
-                        Seluruh interaksi antar-layanan Convex dan webhook n8n
-                        divalidasi secara kriptografis menggunakan algoritma
-                        constant-time.
-                      </span>
-                    </div>
+                {/* Simulated Equipment Image Card */}
+                <div className="h-44 rounded-xl bg-slate-900 overflow-hidden relative flex items-center justify-center group">
+                  <img
+                    src="https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80"
+                    alt="Cordless Drill Preview"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-3.5">
+                    <span className="text-xs text-white font-medium flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      Lender: Verified Community Member
+                    </span>
                   </div>
                 </div>
+
+                {/* Specifications List */}
+                <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] text-slate-400 block font-medium">Condition</span>
+                    <span className="font-semibold text-slate-800">Like New (100% Battery)</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] text-slate-400 block font-medium">Privacy Status</span>
+                    <span className="font-semibold text-emerald-700">Zero PII Leaked</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Parallax Badge 1 (Top Left) */}
+              <div
+                className="absolute -top-5 -left-6 bg-white border border-slate-200 rounded-xl px-3.5 py-2 shadow-lg hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-800 animate-float-slow"
+                style={{
+                  transform: `translate3d(${mousePos.x * -1}px, ${mousePos.y * -1}px, 20px)`,
+                }}
+              >
+                <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <span>Automated Reminders</span>
+              </div>
+
+              {/* Floating Parallax Badge 2 (Bottom Right) */}
+              <div
+                className="absolute -bottom-5 -right-6 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 shadow-xl hidden sm:flex items-center gap-2 text-xs font-semibold text-white animate-float-medium"
+                style={{
+                  transform: `translate3d(${mousePos.x * 1.2}px, ${mousePos.y * 1.2}px, 30px)`,
+                }}
+              >
+                <div className="w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Lock className="w-3.5 h-3.5" />
+                </div>
+                <span>HMAC-SHA256 Signed</span>
               </div>
             </div>
           </div>
@@ -157,23 +217,21 @@ export default function PublicLandingPage() {
       </section>
 
       {/* Public Catalog Section */}
-      <section id="katalog" className="py-14 sm:py-16 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow">
+      <section id="catalog" className="py-14 sm:py-16 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <h2 className="text-2xl font-bold text-slate-950 tracking-tight">
-              Katalog Alat Komunitas
+              Community Equipment Catalog
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
-              Inventaris publik dengan proteksi privasi. Masuk ke akun Anda untuk
-              melihat foto detail, memeriksa reputasi pemilik, dan mengajukan
-              peminjaman.
+              Public read-only directory with database-level privacy protection. Sign in to your account to view detailed photos, verify lender reputations, and request loan dates.
             </p>
           </div>
 
           {!isSignedIn && (
             <SignInButton mode="modal">
               <button className="self-start md:self-auto text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors">
-                Masuk untuk meminjam alat
+                Sign in to borrow equipment &rarr;
               </button>
             </SignInButton>
           )}
@@ -193,7 +251,7 @@ export default function PublicLandingPage() {
                     : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
                 }`}
               >
-                {cat === "All" ? "Semua Kategori" : cat}
+                {cat === "All" ? "All Categories" : cat}
               </button>
             ))}
           </div>
@@ -203,7 +261,7 @@ export default function PublicLandingPage() {
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Cari alat..."
+              placeholder="Search equipment..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors"
@@ -230,19 +288,19 @@ export default function PublicLandingPage() {
             <Wrench className="w-8 h-8 text-slate-400 mx-auto" />
             <h3 className="text-sm font-semibold text-slate-800">
               {publicTools.length === 0
-                ? "Belum ada alat yang terdaftar"
-                : "Tidak ada alat yang cocok dengan filter"}
+                ? "No equipment listed yet"
+                : "No equipment matching filter"}
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
               {publicTools.length === 0
-                ? "Daftarkan alat pertama Anda untuk memulai sirkulasi peralatan di lingkungan tetangga."
-                : "Coba ubah kata kunci pencarian atau pilih kategori lain."}
+                ? "List your first equipment to kick off tool circulation in your neighborhood."
+                : "Try modifying your search keywords or switching categories."}
             </p>
             {publicTools.length === 0 && (
               <div className="pt-1">
                 <SignInButton mode="modal">
                   <button className="px-4 py-2 bg-slate-900 text-white font-semibold text-xs rounded-lg hover:bg-slate-800 transition-colors">
-                    Daftarkan Alat Baru
+                    List Equipment Now
                   </button>
                 </SignInButton>
               </div>
@@ -253,41 +311,47 @@ export default function PublicLandingPage() {
             {filteredTools.map((tool: any) => (
               <div
                 key={tool._id}
-                className="bg-white border border-slate-200/90 rounded-xl p-5 hover:border-slate-300 transition-colors flex flex-col justify-between"
+                className="bg-white border border-slate-200/90 rounded-xl p-5 hover:border-slate-300 transition-colors flex flex-col justify-between shadow-xs hover:shadow-md"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <CategoryIcon category={tool.category} size="md" />
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200/80">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      Tersedia
+                      Available
                     </span>
                   </div>
 
                   <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
                     {tool.category}
                   </span>
-                  <h3 className="text-base font-semibold text-slate-900 mt-0.5">
+                  <h3
+                    onClick={() => setDetailModalTool(tool)}
+                    className="text-base font-bold text-slate-900 hover:text-emerald-700 cursor-pointer transition-colors mt-0.5"
+                  >
                     {tool.name}
                   </h3>
                 </div>
 
                 <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 text-[11px]">
-                    Identitas terlindungi
-                  </span>
+                  <button
+                    onClick={() => setDetailModalTool(tool)}
+                    className="text-slate-500 hover:text-slate-800 font-medium inline-flex items-center gap-1 text-[11px] transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> View Details
+                  </button>
 
                   {isSignedIn ? (
                     <Link
                       href="/dashboard"
-                      className="font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
+                      className="font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
                     >
-                      Ajukan Pinjam
+                      Request to Borrow
                     </Link>
                   ) : (
                     <SignInButton mode="modal">
-                      <button className="font-medium text-emerald-700 hover:text-emerald-800 transition-colors">
-                        Ajukan Pinjam
+                      <button className="font-semibold text-emerald-700 hover:text-emerald-800 transition-colors">
+                        Request to Borrow
                       </button>
                     </SignInButton>
                   )}
@@ -298,16 +362,15 @@ export default function PublicLandingPage() {
         )}
       </section>
 
-      {/* Problem & Solution Comparison Section */}
+      {/* Structured Comparison Section */}
       <section className="border-t border-slate-200/80 bg-white py-14 sm:py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-10">
             <h2 className="text-2xl font-bold text-slate-950 tracking-tight">
-              Mengapa Berbagi Alat Membutuhkan Sistem yang Terstruktur?
+              Why Structured Equipment Sharing Outperforms Informal Chat Groups
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Perbandingan antara meminjam via grup obrolan informal dengan
-              menggunakan platform terotomasi LendLoop.
+              Comparing ad-hoc neighborhood messaging with LendLoop's zero-trust automated platform.
             </p>
           </div>
 
@@ -316,29 +379,26 @@ export default function PublicLandingPage() {
             <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-6 space-y-4">
               <div className="flex items-center gap-2 text-rose-700 text-xs font-semibold uppercase tracking-wider">
                 <X className="w-4 h-4" />
-                Grup WhatsApp / Facebook RT
+                Informal WhatsApp / Facebook Groups
               </div>
 
               <ul className="space-y-3 text-xs text-slate-600">
                 <li className="flex items-start gap-2.5">
                   <span className="text-rose-500 font-bold mt-0.5">•</span>
                   <span>
-                    <strong className="text-slate-800">Kebocoran Privasi:</strong> Nomor telepon dan alamat
-                    rumah tersebar terbuka ke seluruh anggota grup.
+                    <strong className="text-slate-800">Privacy Leaks:</strong> Personal phone numbers and home addresses are exposed openly to entire group directories.
                   </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-rose-500 font-bold mt-0.5">•</span>
                   <span>
-                    <strong className="text-slate-800">Status Terlupakan:</strong> Riwayat peminjaman tenggelam
-                    oleh obrolan harian lainnya dan sering tidak tercatat.
+                    <strong className="text-slate-800">Lost Track of Loans:</strong> Borrow requests drown in hundreds of daily chat messages, leading to forgotten equipment.
                   </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-rose-500 font-bold mt-0.5">•</span>
                   <span>
-                    <strong className="text-slate-800">Canggung Menagih:</strong> Pemilik merasa tidak enak
-                    hati meminta kembali barang yang sudah lewat masa pinjam.
+                    <strong className="text-slate-800">Awkward Chasing:</strong> Owners feel uncomfortable personally pestering neighbors for overdue equipment returns.
                   </span>
                 </li>
               </ul>
@@ -348,29 +408,26 @@ export default function PublicLandingPage() {
             <div className="bg-emerald-50/40 border border-emerald-200/90 rounded-xl p-6 space-y-4">
               <div className="flex items-center gap-2 text-emerald-800 text-xs font-semibold uppercase tracking-wider">
                 <Check className="w-4 h-4" />
-                Pendekatan LendLoop
+                The LendLoop Architecture
               </div>
 
               <ul className="space-y-3 text-xs text-slate-700">
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-700 font-bold mt-0.5">•</span>
                   <span>
-                    <strong className="text-slate-900">Zero-Trust RBAC:</strong> Kontak dan alamat pemilik hanya
-                    diberikan kepada peminjam yang disetujui untuk masa pinjam aktif.
+                    <strong className="text-slate-900">Zero-Trust RBAC:</strong> Lender contact and address remain strictly private until an explicit borrow request is approved.
                   </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-700 font-bold mt-0.5">•</span>
                   <span>
-                    <strong className="text-slate-900">Status Terpantau Real-time:</strong> Pelacakan 4
-                    tahap (Diajukan, Disetujui, Sedang Dipakai, Dikembalikan).
+                    <strong className="text-slate-900">Real-Time 4-Stage Stepper:</strong> Transparent lifecycle tracking (Requested, Approved, In Use, Returned).
                   </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-700 font-bold mt-0.5">•</span>
                   <span>
-                    <strong className="text-slate-900">Pengingat Otomatis n8n:</strong> Sistem mengirimkan
-                    pengingat sopan berjadwal dengan proteksi anti-spam idempoten.
+                    <strong className="text-slate-900">Automated n8n Engine:</strong> Polite, scheduled daily cron reminders with deterministic idempotency to eliminate spam.
                   </span>
                 </li>
               </ul>
@@ -378,6 +435,13 @@ export default function PublicLandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Tool Detail Modal */}
+      <ToolDetailModal
+        tool={detailModalTool}
+        isOpen={!!detailModalTool}
+        onClose={() => setDetailModalTool(null)}
+      />
     </div>
   );
 }

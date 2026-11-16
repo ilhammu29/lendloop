@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LendLoop — Neighborhood Tool Sharing & Lending Platform</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              950: '#070a12',
+              900: '#0b0f19', // Deep matte base
+              850: '#0e1524',
+              800: '#141d30', // Card surface
+              750: '#1a263d', // Elevated surface
+              700: '#23324f',
+              600: '#33486e',
+              500: '#4a6699',
+              emerald: '#10b981', // Glowing primary accent
+              emeraldDark: '#059669',
+              cyan: '#06b6d4',
+              amber: '#f59e0b',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
+          },
+          boxShadow: {
+            'glow-emerald': '0 0 20px -3px rgba(16, 185, 129, 0.4), 0 0 8px -2px rgba(16, 185, 129, 0.3)',
+            'glow-cyan': '0 0 20px -3px rgba(6, 182, 212, 0.4), 0 0 8px -2px rgba(6, 182, 212, 0.3)',
+            'glow-amber': '0 0 20px -3px rgba(245, 158, 11, 0.4)',
+            'card-glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom 4pt/8pt baseline & cyber-utility aesthetics */
+    :root {
+      color-scheme: dark;
+    }
+    
+    body {
+      background-color: #0b0f19;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Ambient cyber dot texture */
+    .cyber-dot-matrix {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* 3D Perspective Card Tilt Container */
+    .tilt-container {
+      perspective: 1000px;
+      transform-style: preserve-3d;
+    }
+
+    .tilt-card {
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+      will-change: transform;
+      transform-style: preserve-3d;
+    }
+
+    .tilt-glare {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0%, transparent 60%);
+      z-index: 20;
+    }
+
+    /* Subtle multi-plane floating badges for Hero */
+    @keyframes floatBadgeA {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(1deg); }
+    }
+    @keyframes floatBadgeB {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(12px) rotate(-1.5deg); }
+    }
+    @keyframes floatBadgeC {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-0.5deg); }
+    }
+
+    .animate-float-a { animation: floatBadgeA 6s ease-in-out infinite; }
+    .animate-float-b { animation: floatBadgeB 7s ease-in-out infinite 0.8s; }
+    .animate-float-c { animation: floatBadgeC 5.5s ease-in-out infinite 1.5s; }
+
+    /* Glowing pulse rings */
+    @keyframes liveRing {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      50% { transform: scale(1.6); opacity: 0; }
+      100% { transform: scale(0.95); opacity: 0; }
+    }
+    .pulse-ring::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 9999px;
+      border: 2px solid #10b981;
+      animation: liveRing 2.4s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+
+    /* Glassmorphism utility */
+    .glass-matte {
+      background: rgba(14, 21, 36, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .glass-elevated {
+      background: rgba(20, 29, 48, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* Custom thin scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f293d;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #33486e;
+    }
+
+    /* Modal open transitions */
+    .modal-backdrop {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content-panel {
+      transform: scale(0.96) translateY(12px);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-backdrop.active .modal-content-panel {
+      transform: scale(1) translateY(0);
+    }
+  </style>
+</head>
+
+<body class="bg-cyber-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+
+  <!-- Ambient Top Edge Cyber Glow Bar -->
+  <div class="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent z-50 opacity-80 pointer-events-none"></div>
+
+  <!-- MAIN WRAPPER WITH RESPONSIVE ICON RAIL SIDEBAR -->
+  <div class="flex flex-1 min-h-screen relative">
+
+    <!-- DESKTOP COLLAPSIBLE ICON-RAIL SIDEBAR (Hidden on small mobile, visible md+) -->
+    <aside id="desktop-rail" class="hidden md:flex flex-col justify-between fixed top-0 bottom-0 left-0 z-40 bg-cyber-950/90 backdrop-blur-xl border-r border-slate-800/80 transition-all duration-300 w-20 hover:w-64 group py-6 px-3">
+      
+      <!-- Top Brand Section -->
+      <div class="flex flex-col gap-6">
+        <!-- Logo -->
+        <a href="#hero" class="flex items-center gap-3 px-2 py-1 overflow-hidden" title="LendLoop Home">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shrink-0 shadow-glow-emerald border border-emerald-400/40">
+            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+            <span class="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
+              Lend<span class="text-emerald-400">Loop</span>
+              <span class="text-[9px] font-mono font-semibold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">V3</span>
+            </span>
+            <p class="text-[10px] text-slate-400 font-mono tracking-tight">Oakwood District Mesh</p>
+          </div>
+        </a>
+
+        <!-- Main Navigation Icons -->
+        <nav class="flex flex-col gap-1.5 mt-2">
+          <!-- All Tools (Active) -->
+          <button onclick="filterCategory('All')" class="nav-item active flex items-center gap-3.5 px-3 py-3 rounded-xl text-slate-200 hover:text-white bg-slate-800/40 hover:bg-slate-800/70 border border-emerald-500/30 transition-all text-left w-full overflow-hidden" title="Equipment Grid">
+            <div class="w-6 h-6 shrink-0 flex items-center justify-center text-emerald-400">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </div>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium whitespace-nowrap text-white">All Tools Catalog</span>
+          </button>
+
+          <!-- Power Equipment -->
+          <button onclick="filterCategory('Power')" class="nav-item flex items-center gap-3.5 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-left w-full overflow-hidden" title="Power Tools">
+            <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium whitespace-nowrap">Power & Cordless</span>
+          </button>
+
+          <!-- Woodworking -->
+          <button onclick="filterCategory('Woodworking')" class="nav-item flex items-center gap-3.5 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-left w-full overflow-hidden" title="Carpentry">
+            <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"></path>
+                <path d="M15 13 9 7l4-4 6 6h3l-3 3"></path>
+              </svg>
+            </div>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium whitespace-nowrap">Woodworking</span>
+          </button>
+
+          <!-- Yard & Garden -->
+          <button onclick="filterCategory('Garden')" class="nav-item flex items-center gap-3.5 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-left w-full overflow-hidden" title="Yard & Garden">
+            <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22v-7l-2-2"></path>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium whitespace-nowrap">Yard & Landscaping</span>
+          </button>
+
+          <!-- Auto & Diagnostics -->
+          <button onclick="filterCategory('Automotive')" class="nav-item flex items-center gap-3.5 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-left w-full overflow-hidden" title="Auto & Diagnostics">
+            <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </div>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium whitespace-nowrap">Automotive Diagnostics</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Bottom Quick Actions -->
+      <div class="flex flex-col gap-3">
+        <!-- Add Tool Action Button -->
+        <button onclick="openAddToolModal()" class="flex items-center gap-3.5 px-3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-glow-emerald w-full overflow-hidden" title="List a Tool">
+          <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-bold whitespace-nowrap">List Tool +</span>
+        </button>
+
+        <!-- User / Neighborhood Badge -->
+        <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+          <div class="w-8 h-8 rounded-lg bg-emerald-950 border border-emerald-500/40 flex items-center justify-center shrink-0 text-emerald-400 text-xs font-mono font-bold">
+            OK7
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 leading-tight whitespace-nowrap">
+            <div class="text-xs font-semibold text-white">Oakwood Hub #7</div>
+            <div class="text-[10px] text-emerald-400 font-mono">Mesh Connected (99.8%)</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MOBILE & TABLET BOTTOM DOCK (Visible on <md) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-cyber-950/95 backdrop-blur-lg border-t border-slate-800 px-4 py-2 flex items-center justify-around shadow-2xl">
+      <button onclick="filterCategory('All')" class="flex flex-col items-center gap-1 text-emerald-400 p-1">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span class="text-[10px] font-medium">Catalog</span>
+      </button>
+      <button onclick="scrollToFilter()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white p-1">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        <span class="text-[10px] font-medium">Filter</span>
+      </button>
+      <!-- Center elevated Add Button -->
+      <button onclick="openAddToolModal()" class="-mt-5 w-12 h-12 rounded-full bg-emerald-500 text-slate-950 font-bold flex items-center justify-center shadow-glow-emerald border-2 border-cyber-900 transition-transform active:scale-95">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+      <button onclick="showTrustModal()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white p-1">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span class="text-[10px] font-medium">Trust</span>
+      </button>
+      <button onclick="showDistrictModal()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white p-1">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+        <span class="text-[10px] font-medium">Oakwood</span>
+      </button>
+    </nav>
+
+    <!-- MAIN SCROLLABLE CONTENT AREA (Offset by rail on desktop) -->
+    <main class="flex-1 md:pl-20 flex flex-col min-h-screen relative pb-20 md:pb-8">
+
+      <!-- TOP UTILITY & TELEMETRY BAR -->
+      <header class="sticky top-0 z-30 bg-cyber-900/80 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-8 py-3.5 flex items-center justify-between gap-4">
+        
+        <!-- Search bar with keyboard shortcut hint -->
+        <div class="relative flex-1 max-w-lg">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <input 
+            type="text" 
+            id="searchInput"
+            placeholder="Search heavy drills, miter saws, lawn aerators, diagnostic OBD2..." 
+            class="w-full pl-10 pr-16 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+            oninput="handleSearch(this.value)"
+          >
+          <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+            <span class="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">/</span>
+          </div>
+        </div>
+
+        <!-- Right telemetry stats & primary CTA -->
+        <div class="flex items-center gap-3">
+          <!-- District Badge with live pulse -->
+          <div class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span class="text-slate-300 font-medium">Sector 4 • Oakwood</span>
+            <span class="font-mono text-emerald-400 font-semibold text-[11px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">0.8 mi</span>
+          </div>
+
+          <!-- Add Tool Button Desktop -->
+          <button onclick="openAddToolModal()" class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs tracking-tight transition-all shadow-glow-emerald active:scale-95">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>List Equipment</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- HERO SECTION WITH INTERACTIVE 3D PARALLAX & MULTI-PLANE FLOATING BADGES -->
+      <section id="hero" class="relative px-4 md:px-8 py-10 md:py-16 overflow-hidden border-b border-slate-800/80 cyber-dot-matrix">
+        
+        <!-- Subtle background glow focal points -->
+        <div class="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10" id="parallaxHeroContainer">
+          
+          <!-- Left Column: Value Proposition & Telemetry Metrics -->
+          <div class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Live Operational Chip -->
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-emerald-500/40 shadow-glow-emerald w-fit">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+              </span>
+              <span class="text-xs font-mono font-medium text-emerald-400 tracking-wide uppercase">Neighborhood Tool Mesh Live</span>
+              <span class="text-slate-600">•</span>
+              <span class="text-xs font-mono text-slate-300">42 Tools Available Today</span>
+            </div>
+
+            <!-- Primary Headline -->
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+              Borrow Heavy Tools. <br>
+              <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Lend Free. Build Near.</span>
+            </h1>
+
+            <!-- Descriptive Text -->
+            <p class="text-base md:text-lg text-slate-300 max-w-xl font-normal leading-relaxed">
+              Stop buying single-use machinery. Access commercial-grade miter saws, gas augers, pressure washers, and diagnostic OBD2 gear from verified neighbors within 5 minutes of your front door.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+              <a href="#equipment-grid" class="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm tracking-tight transition-all shadow-glow-emerald flex items-center gap-2">
+                <span>Explore Local Inventory</span>
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <button onclick="openAddToolModal()" class="px-6 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white font-semibold text-sm border border-slate-700/80 transition-all flex items-center gap-2 hover:border-emerald-500/50">
+                <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                <span>Add Your Equipment</span>
+              </button>
+            </div>
+
+            <!-- Operational Metrics Grid -->
+            <div class="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800/80 max-w-lg">
+              <div>
+                <div class="text-2xl font-extrabold text-white font-mono">148+</div>
+                <div class="text-xs text-slate-400 font-medium">Tools in Oakwood</div>
+              </div>
+              <div>
+                <div class="text-2xl font-extrabold text-emerald-400 font-mono">$38.4k</div>
+                <div class="text-xs text-slate-400 font-medium">Community Savings</div>
+              </div>
+              <div>
+                <div class="text-2xl font-extrabold text-cyan-400 font-mono">100%</div>
+                <div class="text-xs text-slate-400 font-medium">Safe Return Rate</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Interactive Parallax Multi-Plane 3D Stage -->
+          <div class="lg:col-span-5 relative flex items-center justify-center min-h-[360px] md:min-h-[420px] select-none" id="heroPerspectivePlane">
+            
+            <!-- Central Geometric Cyber Shield Display (Plane 0) -->
+            <div class="relative w-72 md:w-80 h-72 md:h-80 rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-950 to-cyber-900 border border-slate-700/60 p-6 flex flex-col justify-between shadow-2xl glass-elevated transition-transform duration-200" id="heroCenterCard">
+              
+              <!-- Card Top Header -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full bg-emerald-500 shadow-glow-emerald"></div>
+                  <span class="text-xs font-mono font-semibold tracking-wider text-slate-300">DISPATCH READY</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">ZONE 04</span>
+              </div>
+
+              <!-- Main Tool Graphic Preview (DeWalt Miter Saw Vector Blueprint) -->
+              <div class="py-4 flex flex-col items-center justify-center">
+                <svg class="w-40 h-28 text-emerald-400" viewBox="0 0 200 140" fill="none">
+                  <!-- Base Plate & Turntable -->
+                  <path d="M20 120 L180 120 L170 130 L30 130 Z" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                  <ellipse cx="100" cy="118" rx="60" ry="10" fill="#0f172a" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3 3"/>
+                  <!-- Miter Fence & Gauge -->
+                  <rect x="40" y="98" width="120" height="18" rx="3" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+                  <path d="M70 102 L70 110 M100 100 L100 112 M130 102 L130 110" stroke="#38bdf8" stroke-width="1.5"/>
+                  <!-- Dual Sliding Guide Rails -->
+                  <rect x="50" y="65" width="100" height="6" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1.2"/>
+                  <rect x="50" y="75" width="100" height="6" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1.2"/>
+                  <!-- Motor Housing & Bevel Arm -->
+                  <path d="M100 70 L130 40 L160 55 L135 85 Z" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+                  <!-- Circular Saw Blade & Guard -->
+                  <circle cx="100" cy="80" r="32" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+                  <circle cx="100" cy="80" r="14" fill="#090d16" stroke="#94a3b8" stroke-width="1.5"/>
+                  <path d="M80 60 L120 100 M80 100 L120 60" stroke="#64748b" stroke-width="1"/>
+                  <!-- Laser guide emitter beam -->
+                  <line x1="100" y1="80" x2="100" y2="118" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 2"/>
+                </svg>
+                <div class="text-sm font-bold text-white tracking-tight mt-1">DeWalt 12" Sliding Compound Miter</div>
+                <div class="text-[11px] text-slate-400 font-mono">15A Motor • Dual Laser Alignment</div>
+              </div>
+
+              <!-- Card Bottom Info -->
+              <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-slate-400 font-mono">Lender: Marcus V.</span>
+                <span class="text-emerald-400 font-mono font-semibold">0.3 mi • $0 Deposit</span>
+              </div>
+            </div>
+
+            <!-- Multi-Plane Floating Badge 1 (Top Left Plane, translateZ: +40px) -->
+            <div class="absolute -top-3 -left-4 md:-left-8 glass-matte p-3 rounded-2xl shadow-card-glass border border-emerald-500/40 animate-float-a z-20 max-w-[210px] pointer-events-auto cursor-pointer hover:border-emerald-400 transition-colors" onclick="openBorrowModal(1)">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/30">
+                  ⚡
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-white">Instant Lockbox Code</div>
+                  <div class="text-[10px] text-emerald-400 font-mono">Pickup 24/7 at Hub A</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Multi-Plane Floating Badge 2 (Bottom Right Plane, translateZ: +65px) -->
+            <div class="absolute -bottom-4 -right-2 md:-right-6 glass-matte p-3 rounded-2xl shadow-card-glass border border-cyan-500/40 animate-float-b z-20 max-w-[220px]">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0 border border-cyan-500/30">
+                  🛡️
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-white">$10,000 Damage Guard</div>
+                  <div class="text-[10px] text-slate-400 font-mono">Oakwood Peer Guarantee</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Multi-Plane Floating Badge 3 (Top Right Plane, translateZ: +50px) -->
+            <div class="hidden sm:flex absolute top-6 -right-4 glass-matte px-3 py-2 rounded-xl shadow-card-glass border border-slate-700/80 animate-float-c z-20 items-center gap-2">
+              <span class="text-xs text-amber-400 font-bold">★ 4.99</span>
+              <span class="text-[11px] text-slate-300 font-mono">1,420 Safe Loans</span>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- FILTER & CATEGORY CONTROL BAR -->
+      <section id="equipment-grid" class="px-4 md:px-8 pt-8 pb-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          
+          <!-- Category Chips -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+            <button onclick="filterCategory('All')" id="btn-cat-all" class="cat-pill active px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition-all shadow-glow-emerald shrink-0">
+              All Equipment (9)
+            </button>
+            <button onclick="filterCategory('Power')" id="btn-cat-power" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all shrink-0">
+              Power & Cordless
+            </button>
+            <button onclick="filterCategory('Woodworking')" id="btn-cat-woodworking" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all shrink-0">
+              Woodworking & Saws
+            </button>
+            <button onclick="filterCategory('Garden')" id="btn-cat-garden" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all shrink-0">
+              Lawn & Landscaping
+            </button>
+            <button onclick="filterCategory('Automotive')" id="btn-cat-automotive" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all shrink-0">
+              Auto & Mechanics
+            </button>
+          </div>
+
+          <!-- Secondary Filters: Available Only Toggle & Proximity Range -->
+          <div class="flex items-center gap-3 shrink-0">
+            <!-- Available Now Switch -->
+            <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-300 select-none bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 hover:border-slate-700">
+              <input type="checkbox" id="availFilterToggle" onchange="toggleAvailableOnly(this.checked)" class="sr-only peer">
+              <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500 relative"></div>
+              <span>Available Now Only</span>
+            </label>
+
+            <!-- District Hub Selector -->
+            <select id="districtSelect" onchange="filterDistrict(this.value)" class="bg-slate-900 text-slate-200 text-xs font-medium px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
+              <option value="all">All Sectors (&lt; 1.0 mi)</option>
+              <option value="sector4">Sector 4 (Oakwood Central)</option>
+              <option value="sector2">Sector 2 (Maple Woods)</option>
+              <option value="sector6">Sector 6 (Highland)</option>
+            </select>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- HARDWARE EQUIPMENT GRID (CARDS WITH INTERACTIVE 3D PERSPECTIVE TILT) -->
+      <section class="px-4 md:px-8 py-6 flex-1">
+        
+        <!-- Active Filter State Indicator -->
+        <div class="flex items-center justify-between mb-6">
+          <div class="text-xs font-mono text-slate-400">
+            SHOWING <span id="displayedCount" class="text-emerald-400 font-bold">9</span> ITEMS IN OAKWOOD MESH
+          </div>
+          <div class="text-xs text-slate-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Real-time availability synced</span>
+          </div>
+        </div>
+
+        <!-- Tool Cards Container (Auto Grid) -->
+        <div id="toolsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Dynamic cards injected by JavaScript -->
+        </div>
+
+        <!-- Empty state when no filters match -->
+        <div id="noResultsState" class="hidden flex-col items-center justify-center py-20 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700 flex items-center justify-center text-slate-400 mb-4">
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-1">No Tools Found</h3>
+          <p class="text-sm text-slate-400 max-w-sm mb-4">No tools match your active category and search filter. Try clearing filters or expand your radius.</p>
+          <button onclick="resetAllFilters()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold border border-slate-700">
+            Reset All Filters
+          </button>
+        </div>
+
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="mt-auto border-t border-slate-800/80 px-4 md:px-8 py-8 bg-cyber-950/60 text-xs text-slate-400">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/30">
+              ⚡
+            </div>
+            <span class="font-bold text-slate-200">LendLoop Neighborhood Tool Sharing Network</span>
+            <span class="text-slate-600">|</span>
+            <span class="font-mono text-[11px] text-slate-500">Node ID: OKW-NODE-781</span>
+          </div>
+          <div class="flex items-center gap-6">
+            <button onclick="showTrustModal()" class="hover:text-emerald-400 transition-colors">Trust & Safety Charter</button>
+            <button onclick="showDistrictModal()" class="hover:text-emerald-400 transition-colors">Oakwood Lockbox Map</button>
+            <span class="text-slate-500">Zero-Deposit Peer Protocol</span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 1: RICH TOOL DETAIL MODAL / SHEET WITH TIMELINE    -->
+  <!-- ======================================================== -->
+  <div id="toolDetailModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+    <div class="modal-content-panel relative w-full max-w-3xl rounded-3xl bg-cyber-900 border border-slate-700/80 shadow-2xl glass-elevated overflow-hidden my-8">
+      
+      <!-- Modal Header Bar -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <div class="flex items-center gap-3">
+          <span id="modalCategoryBadge" class="text-[11px] font-mono font-semibold tracking-wider px-2.5 py-1 rounded-md bg-slate-800 text-cyan-400 border border-slate-700">
+            WOODWORKING
+          </span>
+          <div id="modalStatusBadge" class="flex items-center gap-1.5 text-xs font-mono font-medium text-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-glow-emerald"></span>
+            <span>AVAILABLE TODAY</span>
+          </div>
+        </div>
+        <button onclick="closeToolDetailModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body Content -->
+      <div class="p-6 md:p-8 space-y-6">
+        
+        <!-- Top Title & Quick Overview -->
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div>
+            <h2 id="modalToolTitle" class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">DeWalt 12" Sliding Compound Miter Saw</h2>
+            <p id="modalToolSubtitle" class="text-sm text-slate-300 mt-1">Model DWS779 • Commercial Grade Precision Miter Cutting Station</p>
+          </div>
+          <div class="shrink-0 flex items-center gap-2">
+            <div class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-right">
+              <div class="text-[10px] font-mono text-slate-400">PICKUP RADIUS</div>
+              <div id="modalProximity" class="text-xs font-bold text-emerald-400 font-mono">0.3 miles away</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tool Blueprint / Graphic Banner & Key Telemetry -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
+          <div id="modalToolGraphic" class="md:col-span-5 flex items-center justify-center p-4">
+            <!-- Injected by JS -->
+          </div>
+          <div class="md:col-span-7 grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span class="text-[10px] font-mono text-slate-400 block mb-1">POWER DRIVE</span>
+              <span id="modalSpecPower" class="font-bold text-white block">15 Amp Motor (3,800 RPM)</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span class="text-[10px] font-mono text-slate-400 block mb-1">CONDITION RATING</span>
+              <span id="modalSpecCondition" class="font-bold text-emerald-400 block">Grade A+ (Calibrated)</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span class="text-[10px] font-mono text-slate-400 block mb-1">MAX LOAN DURATION</span>
+              <span id="modalSpecLoan" class="font-bold text-white block">Up to 3 Days</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span class="text-[10px] font-mono text-slate-400 block mb-1">COMMUNITY DEPOSIT</span>
+              <span class="font-bold text-cyan-400 block font-mono">$0 (Peer Trust Backed)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner Reputation Pill & Trust Status -->
+        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-slate-900 flex items-center justify-center font-bold text-white text-base border border-emerald-500/30">
+              <span id="modalOwnerInitials">MV</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="modalOwnerName" class="text-sm font-bold text-white">Marcus Vance</span>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Verified Resident</span>
+              </div>
+              <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                <span class="text-amber-400 font-semibold">★ 4.99</span>
+                <span>•</span>
+                <span id="modalOwnerStats">48 Successful Loans</span>
+                <span>•</span>
+                <span class="text-emerald-400">100% On-Time Returns</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="showOwnerMessageToast()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shrink-0">
+            Ask Owner a Question
+          </button>
+        </div>
+
+        <!-- Interactive Condition & Maintenance Timeline -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-mono font-bold tracking-wider text-slate-300 uppercase">Hardware Inspection & Condition Log</h4>
+            <span class="text-[10px] font-mono text-emerald-400">All checks verified by community members</span>
+          </div>
+
+          <div id="modalConditionTimeline" class="space-y-3 relative pl-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-800">
+            <!-- Timeline elements dynamically injected -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Action Bar -->
+      <div class="px-6 py-4 bg-slate-950/80 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs text-slate-400 font-mono">
+          <span>Security Token: </span>
+          <span id="modalTokenPreview" class="text-emerald-400">HMAC-OKW-9281</span>
+        </div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button onclick="closeToolDetailModal()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors">
+            Close
+          </button>
+          <button onclick="openBorrowFromDetail()" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs tracking-tight transition-all shadow-glow-emerald flex items-center justify-center gap-2">
+            <span>Request Reservation</span>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 2: BORROW CONFIRMATION & PASSCODE RESERVATION      -->
+  <!-- ======================================================== -->
+  <div id="borrowModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+    <div class="modal-content-panel relative w-full max-w-lg rounded-3xl bg-cyber-900 border border-slate-700 shadow-2xl glass-elevated overflow-hidden my-8">
+      
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-glow-emerald"></div>
+          <span class="text-sm font-bold text-white">Confirm Equipment Loan Request</span>
+        </div>
+        <button onclick="closeBorrowModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <div>
+          <span class="text-[10px] font-mono text-slate-400 uppercase">Selected Tool</span>
+          <h3 id="borrowToolTitle" class="text-lg font-bold text-white">DeWalt 12" Sliding Compound Miter Saw</h3>
+          <p id="borrowToolLocation" class="text-xs text-emerald-400 font-mono mt-0.5">Oakwood Hub 4 • Locker 12B</p>
+        </div>
+
+        <!-- Duration Picker -->
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Select Loan Duration</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <button type="button" onclick="selectDuration(1)" id="dur-1" class="dur-btn active p-3 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs text-center border border-emerald-400 shadow-glow-emerald">
+              <span class="block text-base">24 Hours</span>
+              <span class="text-[10px] opacity-80">Return Tomorrow</span>
+            </button>
+            <button type="button" onclick="selectDuration(2)" id="dur-2" class="dur-btn p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 font-bold text-xs text-center border border-slate-700">
+              <span class="block text-base">48 Hours</span>
+              <span class="text-[10px] opacity-70">Weekend Project</span>
+            </button>
+            <button type="button" onclick="selectDuration(3)" id="dur-3" class="dur-btn p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 font-bold text-xs text-center border border-slate-700">
+              <span class="block text-base">72 Hours</span>
+              <span class="text-[10px] opacity-70">Major Reno</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Neighborhood Safety Pledge Checkboxes -->
+        <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2.5 text-xs text-slate-300">
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" id="pledge1" checked class="mt-0.5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 bg-slate-800">
+            <span>I agree to return tool clean and lubricated before loan expiry.</span>
+          </label>
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" id="pledge2" checked class="mt-0.5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 bg-slate-800">
+            <span>I will wear appropriate PPE (eye protection & ear protection).</span>
+          </label>
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" id="pledge3" checked class="mt-0.5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 bg-slate-800">
+            <span>I understand this is a zero-deposit neighborhood trust loan.</span>
+          </label>
+        </div>
+
+        <!-- Generated Passcode Box (Simulated Output) -->
+        <div id="passcodeOutputSection" class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-center space-y-2">
+          <div class="text-[10px] font-mono text-emerald-400 uppercase tracking-wider">Instant Smart Lockbox Passcode</div>
+          <div id="generatedPasscode" class="text-3xl font-extrabold font-mono tracking-widest text-white">492-817</div>
+          <div class="text-xs text-slate-400">Enter this code on the Oakwood Hub lockbox panel to retrieve the key.</div>
+        </div>
+
+      </div>
+
+      <div class="px-6 py-4 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="closeBorrowModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">
+          Cancel
+        </button>
+        <button onclick="submitReservation()" class="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs tracking-tight shadow-glow-emerald transition-all">
+          Authorize & Lock In Loan
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 3: ADD TOOL MODAL WITH LOCAL FILE UPLOAD PREVIEW   -->
+  <!-- ======================================================== -->
+  <div id="addToolModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+    <div class="modal-content-panel relative w-full max-w-2xl rounded-3xl bg-cyber-900 border border-slate-700 shadow-2xl glass-elevated overflow-hidden my-8">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-glow-emerald"></div>
+          <h3 class="text-base font-bold text-white">List Equipment in Oakwood District</h3>
+        </div>
+        <button onclick="closeAddToolModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Add Tool Form -->
+      <form id="addToolForm" onsubmit="handleCreateTool(event)" class="p-6 md:p-8 space-y-5">
+        
+        <!-- Tool Title & Brand/Model -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">Equipment Title *</label>
+            <input 
+              type="text" 
+              id="newToolTitle" 
+              required
+              placeholder="e.g. Milwaukee M18 FUEL Band Saw"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">Category *</label>
+            <select 
+              id="newToolCategory"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="Power">Power & Cordless</option>
+              <option value="Woodworking">Woodworking & Saws</option>
+              <option value="Garden">Lawn & Landscaping</option>
+              <option value="Automotive">Automotive & Mechanics</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Specifications & Condition Grade -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">Key Specs & Power *</label>
+            <input 
+              type="text" 
+              id="newToolSpecs" 
+              required
+              placeholder="e.g. 18V Cordless • 2x 5.0Ah Batteries"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">Condition Grade</label>
+            <select 
+              id="newToolCondition"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="Grade A+ • Mint & Calibrated">Grade A+ • Mint & Calibrated</option>
+              <option value="Grade A • Excellent Condition">Grade A • Excellent Condition</option>
+              <option value="Grade B+ • Reliable Workhorse">Grade B+ • Reliable Workhorse</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Location Sector & Max Loan Days -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">Location / Neighborhood Sector</label>
+            <input 
+              type="text" 
+              id="newToolLocation" 
+              value="Sector 4 (Oakwood Central)"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">Max Loan Duration</label>
+            <select 
+              id="newToolMaxDays"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="Up to 2 Days">Up to 2 Days</option>
+              <option value="Up to 3 Days">Up to 3 Days</option>
+              <option value="Up to 5 Days">Up to 5 Days</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LOCAL FILE UPLOAD DRAG & DROP ZONE (WITH FILEREADER PREVIEW) -->
+        <div>
+          <label class="block text-xs font-mono font-medium text-slate-300 uppercase mb-1.5">
+            Equipment Photo (Local File Upload Preview)
+          </label>
+          
+          <!-- Drop Area -->
+          <div 
+            id="dropZone"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)"
+            ondrop="handleFileDrop(event)"
+            onclick="document.getElementById('fileInput').click()"
+            class="relative border-2 border-dashed border-slate-700 hover:border-emerald-500/70 rounded-2xl p-6 text-center cursor-pointer bg-slate-950/60 hover:bg-slate-950/90 transition-all group"
+          >
+            <input 
+              type="file" 
+              id="fileInput" 
+              accept="image/*" 
+              class="hidden" 
+              onchange="handleFileSelect(event)"
+            >
+            
+            <!-- Default Placeholder State -->
+            <div id="uploadPlaceholder" class="flex flex-col items-center justify-center gap-2">
+              <div class="w-12 h-12 rounded-xl bg-slate-800/80 group-hover:bg-emerald-500/10 text-slate-400 group-hover:text-emerald-400 flex items-center justify-center transition-colors">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <div class="text-xs text-slate-200 font-semibold">
+                Drag and drop your tool photo here, or <span class="text-emerald-400 underline">browse files</span>
+              </div>
+              <div class="text-[11px] text-slate-400 font-mono">
+                Supports PNG, JPG, WebP up to 10MB (Local FileReader preview)
+              </div>
+            </div>
+
+            <!-- Upload Preview State (Shown when file selected) -->
+            <div id="uploadPreviewContainer" class="hidden flex-col items-center justify-center gap-3">
+              <div class="relative w-36 h-28 rounded-xl overflow-hidden border border-emerald-500/50 shadow-glow-emerald bg-slate-900">
+                <img id="imagePreview" src="" alt="Tool Upload Preview" class="w-full h-full object-cover">
+              </div>
+              <div class="flex items-center gap-3">
+                <span id="uploadFileName" class="text-xs font-mono text-emerald-400">tool-photo.jpg</span>
+                <button 
+                  type="button" 
+                  onclick="clearUploadedImage(event)" 
+                  class="px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/50 text-[10px] hover:bg-red-900"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Form Submission Footer -->
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button type="button" onclick="closeAddToolModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs tracking-tight shadow-glow-emerald transition-all">
+            List Equipment in Mesh
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT LOGIC & 3D PARALLAX INTERACTION -->
+  <script>
+    // ==========================================================
+    // 1. SEED DATA MODEL FOR NEIGHBORHOOD TOOLS
+    // ==========================================================
+    const INITIAL_TOOLS = [
+      {
+        id: 1,
+        title: 'DeWalt 12" Sliding Compound Miter Saw',
+        model: 'DWS779 Double-Bevel Precision Saw',
+        category: 'Woodworking',
+        categorySlug: 'Woodworking',
+        specs: '15 Amp Motor • 3,800 RPM • Dual Steel Rails',
+        power: '15-Amp Corded Heavy Duty',
+        condition: 'Grade A+ • Calibrated Nov 12',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 4',
+        proximity: '0.3 mi away',
+        owner: 'Marcus Vance',
+        ownerInitials: 'MV',
+        ownerStats: '48 Successful Loans • 100% On-Time',
+        maxDuration: 'Up to 3 Days',
+        token: 'HMAC-OKW-9281',
+        svgType: 'miterSaw',
+        timeline: [
+          { date: 'Nov 12, 2026', title: 'Carbide blade sharpened & laser aligned', user: 'Marcus Vance' },
+          { date: 'Oct 28, 2026', title: 'Dust extraction filter replaced', user: 'Marcus Vance' },
+          { date: 'Oct 04, 2026', title: 'Returned on-time in pristine condition', user: 'Elena Rostova' }
+        ]
+      },
+      {
+        id: 2,
+        title: 'STIHL MS 250 Gas Chainsaw 18" Bar',
+        model: 'Commercial Timber & Firewood Cutting',
+        category: 'Yard & Landscaping',
+        categorySlug: 'Garden',
+        specs: '45.4 cc Engine • Anti-Vibe System • 2-Stroke',
+        power: 'Gas 2-Stroke (Synthetic Mix Provided)',
+        condition: 'Grade A • Chain Freshly Ground',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 2',
+        proximity: '0.5 mi away',
+        owner: 'Elena Rostova',
+        ownerInitials: 'ER',
+        ownerStats: '62 Successful Loans • 5.0 Rating',
+        maxDuration: 'Up to 2 Days',
+        token: 'HMAC-OKW-8419',
+        svgType: 'chainsaw',
+        timeline: [
+          { date: 'Nov 10, 2026', title: 'Bar dressed, chain sharpened, spark plug gap tested', user: 'Elena Rostova' },
+          { date: 'Sep 22, 2026', title: 'Carburetor tuned for autumn blend', user: 'Oakwood Co-op' }
+        ]
+      },
+      {
+        id: 3,
+        title: 'Bosch Bulldog Xtreme SDS-Plus Rotary Hammer',
+        model: '11255VSR Heavy Masonry & Concrete Breaker',
+        category: 'Power & Cordless',
+        categorySlug: 'Power',
+        specs: '8.0 Amp • 2.6 Ft-Lbs Impact • 3-Mode Selector',
+        power: 'Corded 120V Electric',
+        condition: 'Grade A+ • Shroud Included',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 4',
+        proximity: '0.2 mi away',
+        owner: 'David Kim',
+        ownerInitials: 'DK',
+        ownerStats: '31 Successful Loans • 4.97 Rating',
+        maxDuration: 'Up to 4 Days',
+        token: 'HMAC-OKW-5102',
+        svgType: 'rotaryHammer',
+        timeline: [
+          { date: 'Nov 04, 2026', title: 'Gearbox grease flushed and replenished', user: 'David Kim' },
+          { date: 'Oct 14, 2026', title: 'Tested on basement anchor bolts', user: 'Tom Bradley' }
+        ]
+      },
+      {
+        id: 4,
+        title: 'Honda 3,000 PSI Gas Pressure Washer',
+        model: 'GX200 196cc OHV Surface Cleaning System',
+        category: 'Yard & Landscaping',
+        categorySlug: 'Garden',
+        specs: '2.5 GPM • 5 Quick-Connect Nozzles • 30ft Hose',
+        power: 'Honda GX200 4-Stroke Gas',
+        condition: 'Grade A • Fresh Oil & Filter',
+        status: 'loaned',
+        statusText: 'LOANED • DUE IN 6H',
+        location: 'Oakwood Sector 2',
+        proximity: '0.7 mi away',
+        owner: 'Sarah Jenkins',
+        ownerInitials: 'SJ',
+        ownerStats: '74 Successful Loans • 4.98 Rating',
+        maxDuration: 'Up to 2 Days',
+        token: 'HMAC-OKW-1934',
+        svgType: 'pressureWasher',
+        timeline: [
+          { date: 'Nov 14, 2026', title: 'Currently loaned for patio refresh to Neighbor Mark', user: 'Sarah Jenkins' },
+          { date: 'Oct 30, 2026', title: 'Pump winterizing inspection completed', user: 'Sarah Jenkins' }
+        ]
+      },
+      {
+        id: 5,
+        title: 'Ridgid 7" Wet Tile Saw with Laser & Stand',
+        model: 'R4007 Porcelain & Ceramic Wet Station',
+        category: 'Woodworking',
+        categorySlug: 'Woodworking',
+        specs: '6.5 Amp • True Flat Sliding Table • Submersible Pump',
+        power: '120V Corded Electric',
+        condition: 'Grade A • Diamond Blade Clean',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 4',
+        proximity: '0.4 mi away',
+        owner: 'Hector Alvarez',
+        ownerInitials: 'HA',
+        ownerStats: '23 Successful Loans • 4.95 Rating',
+        maxDuration: 'Up to 3 Days',
+        token: 'HMAC-OKW-6041',
+        svgType: 'tileSaw',
+        timeline: [
+          { date: 'Nov 01, 2026', title: 'Water pump inspected and flow tested', user: 'Hector Alvarez' },
+          { date: 'Oct 19, 2026', title: 'Bathroom floor subway tile project completed', user: 'Rachel Patel' }
+        ]
+      },
+      {
+        id: 6,
+        title: 'Milwaukee M18 FUEL 1/2" High Torque Impact',
+        model: '2767-20 Brushless 1,400 ft-lbs Friction Ring',
+        category: 'Automotive & Mechanics',
+        categorySlug: 'Automotive',
+        specs: '1,400 ft-lbs Nut-Busting • 2x 5.0Ah Batteries',
+        power: 'Cordless 18V RedLithium',
+        condition: 'Grade A+ • Impact Sockets Inc.',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 6',
+        proximity: '0.6 mi away',
+        owner: 'Rachel Patel',
+        ownerInitials: 'RP',
+        ownerStats: '39 Successful Loans • 5.0 Rating',
+        maxDuration: 'Up to 2 Days',
+        token: 'HMAC-OKW-7729',
+        svgType: 'impactWrench',
+        timeline: [
+          { date: 'Nov 08, 2026', title: 'Battery pack cell balancing verified at 100% health', user: 'Rachel Patel' },
+          { date: 'Oct 25, 2026', title: 'Lug nut swap on neighbor Ford F-150', user: 'David Kim' }
+        ]
+      },
+      {
+        id: 7,
+        title: 'Classen 18" Mechanical Core Lawn Aerator',
+        model: 'Heavy Duty Turf Coring Drum Machine',
+        category: 'Yard & Landscaping',
+        categorySlug: 'Garden',
+        specs: 'Honda GX120 • 30 Coring Tines • 2.75" Depth',
+        power: 'Honda Commercial Engine',
+        condition: 'Commercial Grade • Inspected',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 4',
+        proximity: '0.1 mi away (Co-op Shed)',
+        owner: 'Oakwood Community Co-op',
+        ownerInitials: 'OC',
+        ownerStats: '185 Successful Loans • 5.0 Rating',
+        maxDuration: 'Up to 1 Day',
+        token: 'HMAC-OKW-3310',
+        svgType: 'aerator',
+        timeline: [
+          { date: 'Nov 09, 2026', title: 'Tine penetration depth gauge calibrated', user: 'Oakwood Co-op' },
+          { date: 'Oct 21, 2026', title: 'Fall overseeding pass on West Green', user: 'Marcus Vance' }
+        ]
+      },
+      {
+        id: 8,
+        title: 'Ryobi ONE+ 18V Cordless Drain Auger 25-Foot',
+        model: 'P4001 Auto-Feed Plumbing Snake',
+        category: 'Power & Cordless',
+        categorySlug: 'Power',
+        specs: '0-600 RPM • 25ft Steel Cable • Bulb Head',
+        power: 'Cordless 18V ONE+ Battery',
+        condition: 'Grade A • Fully Sanitized',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 3',
+        proximity: '0.8 mi away',
+        owner: 'Tom Bradley',
+        ownerInitials: 'TB',
+        ownerStats: '19 Successful Loans • 4.96 Rating',
+        maxDuration: 'Up to 2 Days',
+        token: 'HMAC-OKW-4822',
+        svgType: 'drainAuger',
+        timeline: [
+          { date: 'Nov 02, 2026', title: 'Cable sanitized, greased, and auto-feed tested', user: 'Tom Bradley' },
+          { date: 'Sep 29, 2026', title: 'Main kitchen drain cleared safely without chemicals', user: 'Hector Alvarez' }
+        ]
+      },
+      {
+        id: 9,
+        title: 'Autel MaxiCOM Automotive OBD2 Diagnostic Scanner',
+        model: 'MK808S Full Bi-directional System Scan',
+        category: 'Automotive & Mechanics',
+        categorySlug: 'Automotive',
+        specs: 'Full ECU Scan • Live Graphing • Tablet Unit',
+        power: 'Rechargeable 5000mAh Battery',
+        condition: 'Grade A+ • 2026 Updates',
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: 'Oakwood Sector 5',
+        proximity: '0.4 mi away',
+        owner: 'Zack Morales',
+        ownerInitials: 'ZM',
+        ownerStats: '52 Successful Loans • 4.99 Rating',
+        maxDuration: 'Up to 3 Days',
+        token: 'HMAC-OKW-8840',
+        svgType: 'obdScanner',
+        timeline: [
+          { date: 'Nov 13, 2026', title: 'Firmware updated with 2026 vehicle definition library', user: 'Zack Morales' },
+          { date: 'Oct 11, 2026', title: 'Diagnosed EVAP canister solenoid fault on Subaru', user: 'David Kim' }
+        ]
+      }
+    ];
+
+    let currentTools = [...INITIAL_TOOLS];
+    let activeCategory = 'All';
+    let availableOnly = false;
+    let selectedSector = 'all';
+    let searchQuery = '';
+    let selectedDurationDays = 1;
+    let activeModalTool = null;
+    let customUploadedImage = null;
+
+    // ==========================================================
+    // 2. SVG TOOL ILLUSTRATIONS GENERATOR (NO EXTERNAL IMAGES)
+    // ==========================================================
+    function getToolSvgGraphic(svgType, customImgUrl) {
+      if (customImgUrl) {
+        return `<img src="${customImgUrl}" alt="Tool Photo" class="w-full h-36 object-contain rounded-xl">`;
+      }
+
+      switch (svgType) {
+        case 'miterSaw':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <path d="M25 115 L175 115 L165 125 L35 125 Z" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+              <ellipse cx="100" cy="112" rx="55" ry="9" fill="#0f172a" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <rect x="45" y="94" width="110" height="18" rx="2" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+              <rect x="60" y="60" width="80" height="6" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1.2"/>
+              <rect x="60" y="70" width="80" height="6" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1.2"/>
+              <path d="M100 65 L130 35 L160 50 L135 80 Z" fill="#0b1324" stroke="#10b981" stroke-width="2"/>
+              <circle cx="100" cy="75" r="30" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+              <circle cx="100" cy="75" r="12" fill="#090d16" stroke="#94a3b8" stroke-width="1.5"/>
+              <line x1="100" y1="75" x2="100" y2="112" stroke="#10b981" stroke-width="2" stroke-dasharray="2 2"/>
+            </svg>
+          `;
+        case 'chainsaw':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Guide Bar -->
+              <path d="M85 62 L185 62 C192 62 196 68 185 74 L85 74 Z" fill="#334155" stroke="#94a3b8" stroke-width="2"/>
+              <line x1="95" y1="68" x2="180" y2="68" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 2"/>
+              <!-- Motor Engine Body -->
+              <rect x="35" y="45" width="55" height="42" rx="6" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <path d="M40 50 L60 50 M40 56 L60 56 M40 62 L60 62" stroke="#475569" stroke-width="1.5"/>
+              <!-- Rear Handle -->
+              <path d="M35 55 L15 55 C10 55 10 75 25 75 L35 75" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+              <!-- Top Wrap Handle -->
+              <path d="M50 45 C50 25 75 25 75 45" fill="none" stroke="#64748b" stroke-width="3"/>
+              <!-- Hand Guard / Chain Brake -->
+              <path d="M78 40 L82 25 L88 27 L84 45" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+            </svg>
+          `;
+        case 'rotaryHammer':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- SDS Chuck & Chisel -->
+              <rect x="120" y="58" width="25" height="14" rx="2" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+              <path d="M145 62 L185 62 L190 65 L185 68 L145 68 Z" fill="#64748b" stroke="#cbd5e1" stroke-width="1.5"/>
+              <!-- Gearcase -->
+              <path d="M75 50 L120 54 L120 76 L75 80 Z" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <!-- Motor Housing -->
+              <rect x="50" y="45" width="30" height="48" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+              <!-- Pistol Grip Handle -->
+              <path d="M52 85 L35 110 C32 114 38 118 45 115 L62 90" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+              <!-- Auxiliary Front Handle -->
+              <rect x="110" y="76" width="10" height="35" rx="3" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+            </svg>
+          `;
+        case 'pressureWasher':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Frame & Tubular Handle -->
+              <path d="M60 25 L60 90 L135 90 L135 70" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+              <!-- Heavy Tread Wheels -->
+              <circle cx="60" cy="98" r="18" fill="#0f172a" stroke="#475569" stroke-width="3"/>
+              <circle cx="60" cy="98" r="8" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+              <circle cx="135" cy="98" r="18" fill="#0f172a" stroke="#475569" stroke-width="3"/>
+              <circle cx="135" cy="98" r="8" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+              <!-- Engine Block -->
+              <rect x="80" y="52" width="45" height="35" rx="4" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <!-- Brass Pump Head -->
+              <rect x="125" y="60" width="16" height="18" rx="2" fill="#d97706" stroke="#f59e0b" stroke-width="1.5"/>
+              <!-- Spray Wand Holder -->
+              <line x1="50" y1="35" x2="165" y2="105" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'tileSaw':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Water Tray / Basin -->
+              <rect x="30" y="85" width="140" height="25" rx="3" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+              <!-- Sliding Table Guide -->
+              <rect x="40" y="75" width="80" height="12" rx="2" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+              <!-- Overhead Overhead Arm Support -->
+              <path d="M145 85 L145 40 L95 40" fill="none" stroke="#94a3b8" stroke-width="3"/>
+              <!-- Motor & Diamond Blade -->
+              <rect x="80" y="32" width="30" height="20" rx="3" fill="#0f172a" stroke="#10b981" stroke-width="1.8"/>
+              <circle cx="95" cy="62" r="22" fill="#334155" stroke="#38bdf8" stroke-width="2"/>
+              <circle cx="95" cy="62" r="7" fill="#090d16" stroke="#94a3b8" stroke-width="1.5"/>
+              <!-- Laser Line -->
+              <line x1="95" y1="62" x2="40" y2="78" stroke="#10b981" stroke-width="1.5" stroke-dasharray="2 2"/>
+            </svg>
+          `;
+        case 'impactWrench':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Anvil 1/2 Square -->
+              <rect x="140" y="44" width="16" height="14" rx="2" fill="#64748b" stroke="#cbd5e1" stroke-width="1.5"/>
+              <!-- Hammer Case (Metal Front) -->
+              <path d="M105 38 L140 42 L140 60 L105 64 Z" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
+              <!-- Brushless Motor Body -->
+              <rect x="65" y="32" width="42" height="38" rx="5" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <!-- Ergonomic Grip Handle -->
+              <path d="M72 70 L65 102 C64 105 68 108 72 106 L85 70" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+              <!-- M18 Battery Foot Pack -->
+              <rect x="52" y="104" width="38" height="16" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+              <!-- LED Worklight Emitter -->
+              <circle cx="106" cy="68" r="3" fill="#10b981" stroke="#34d399" stroke-width="1"/>
+            </svg>
+          `;
+        case 'aerator':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Coring Tine Drum -->
+              <circle cx="85" cy="85" r="30" fill="#0f172a" stroke="#475569" stroke-width="2.5"/>
+              <!-- Hollow Tines -->
+              <path d="M85 55 L85 45 M85 115 L85 125 M55 85 L45 85 M115 85 L125 85 M64 64 L56 56 M106 106 L114 114" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- Engine Tray & Shroud -->
+              <rect x="95" y="45" width="45" height="35" rx="3" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+              <!-- Foldable Handle Frame -->
+              <path d="M85 85 L145 35 L170 30" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+              <!-- Rear Transport Wheels -->
+              <circle cx="145" cy="95" r="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+            </svg>
+          `;
+        case 'drainAuger':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Rotating Cable Drum -->
+              <ellipse cx="80" cy="65" rx="36" ry="32" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <ellipse cx="80" cy="65" rx="20" ry="18" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+              <!-- Cable Guide Tube -->
+              <path d="M115 62 L160 62" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+              <!-- Flexible Spring Cable & Bulb Head -->
+              <path d="M160 62 Q175 60 185 64 Q190 68 185 72" stroke="#38bdf8" stroke-width="2" fill="none"/>
+              <!-- Power Grip & Battery Base -->
+              <path d="M55 75 L45 105 L65 105" fill="none" stroke="#94a3b8" stroke-width="3"/>
+              <rect x="40" y="105" width="30" height="12" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+            </svg>
+          `;
+        case 'obdScanner':
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <!-- Rugged Tablet Body -->
+              <rect x="45" y="25" width="110" height="80" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <!-- Corner Rubber Bumpers -->
+              <rect x="42" y="22" width="12" height="12" rx="3" fill="#334155"/>
+              <rect x="146" y="22" width="12" height="12" rx="3" fill="#334155"/>
+              <rect x="42" y="96" width="12" height="12" rx="3" fill="#334155"/>
+              <rect x="146" y="96" width="12" height="12" rx="3" fill="#334155"/>
+              <!-- Diagnostic Touchscreen -->
+              <rect x="58" y="35" width="84" height="60" rx="3" fill="#070a12" stroke="#38bdf8" stroke-width="1.2"/>
+              <!-- Live Telemetry Graph Wave -->
+              <path d="M62 65 L75 65 L80 50 L88 78 L95 60 L102 65 L138 65" fill="none" stroke="#10b981" stroke-width="1.8"/>
+              <text x="64" y="46" fill="#38bdf8" font-size="7" font-family="monospace">ECU: LIVE DATA</text>
+              <text x="64" y="88" fill="#94a3b8" font-size="6" font-family="monospace">DTC: 0 CODES</text>
+            </svg>
+          `;
+        default:
+          return `
+            <svg class="w-full h-36 text-emerald-400 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 200 130" fill="none">
+              <rect x="50" y="35" width="100" height="60" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+              <circle cx="100" cy="65" r="18" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+              <path d="M92 65 L108 65 M100 57 L100 73" stroke="#10b981" stroke-width="2"/>
+            </svg>
+          `;
+      }
+    }
+
+    // ==========================================================
+    // 3. RENDER HARDWARE CARDS WITH 3D PERSPECTIVE PARALLAX TILT
+    // ==========================================================
+    function renderToolsGrid() {
+      const grid = document.getElementById('toolsGrid');
+      const emptyState = document.getElementById('noResultsState');
+      const countEl = document.getElementById('displayedCount');
+
+      // Filter array
+      const filtered = currentTools.filter(tool => {
+        const matchesCategory = (activeCategory === 'All') || (tool.categorySlug === activeCategory);
+        const matchesAvailable = !availableOnly || (tool.status === 'available');
+        const matchesDistrict = (selectedSector === 'all') || 
+          (selectedSector === 'sector4' && tool.location.includes('Sector 4')) ||
+          (selectedSector === 'sector2' && tool.location.includes('Sector 2')) ||
+          (selectedSector === 'sector6' && tool.location.includes('Sector 6'));
+        const matchesSearch = searchQuery === '' || 
+          tool.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          tool.specs.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          tool.owner.toLowerCase().includes(searchQuery.toLowerCase());
+
+        return matchesCategory && matchesAvailable && matchesDistrict && matchesSearch;
+      });
+
+      countEl.textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+
+      grid.innerHTML = filtered.map(tool => {
+        const isAvailable = tool.status === 'available';
+        const pulseStatus = isAvailable
+          ? `<span class="relative flex h-2.5 w-2.5">
+               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+               <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-glow-emerald"></span>
+             </span>
+             <span class="text-[11px] font-mono font-semibold text-emerald-400">${tool.statusText}</span>`
+          : `<span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-glow-amber"></span>
+             <span class="text-[11px] font-mono font-semibold text-amber-400">${tool.statusText}</span>`;
+
+        return `
+          <div class="tilt-container">
+            <div 
+              class="tilt-card relative rounded-2xl bg-cyber-800/90 border border-slate-700/70 p-5 flex flex-col justify-between h-full group hover:border-emerald-500/50 shadow-lg cursor-pointer overflow-hidden glass-matte"
+              onmousemove="handleCardTilt(event, this)"
+              onmouseleave="resetCardTilt(this)"
+              onclick="openToolDetailModal(${tool.id})"
+            >
+              <!-- Dynamic Specular Glare Reflection Layer -->
+              <div class="tilt-glare"></div>
+
+              <!-- Top Card Info Bar -->
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700/80 uppercase">
+                  ${tool.category}
+                </span>
+                <div class="flex items-center gap-2">
+                  ${pulseStatus}
+                </div>
+              </div>
+
+              <!-- Center Tool Blueprint / Photo Graphic -->
+              <div class="py-2 px-1 flex items-center justify-center bg-slate-950/60 rounded-xl border border-slate-800/80 mb-4 group-hover:border-emerald-500/30 transition-colors">
+                ${getToolSvgGraphic(tool.svgType, tool.customImg)}
+              </div>
+
+              <!-- Title & Key Specifications -->
+              <div class="flex-1">
+                <h3 class="text-base font-bold text-white group-hover:text-emerald-300 transition-colors tracking-tight line-clamp-1">
+                  ${tool.title}
+                </h3>
+                <p class="text-xs text-slate-300 mt-1 line-clamp-1 font-mono">
+                  ${tool.specs}
+                </p>
+                <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-2 font-mono">
+                  <span class="text-emerald-400">📍 ${tool.proximity}</span>
+                  <span>•</span>
+                  <span>${tool.condition}</span>
+                </div>
+              </div>
+
+              <!-- Bottom Lender Pill & Action Trigger -->
+              <div class="pt-4 mt-4 border-t border-slate-800/90 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center font-bold text-[11px] text-emerald-400 font-mono">
+                    ${tool.ownerInitials}
+                  </div>
+                  <div class="leading-tight">
+                    <span class="text-xs font-semibold text-slate-200 block">${tool.owner}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">${tool.maxDuration}</span>
+                  </div>
+                </div>
+
+                <button 
+                  type="button" 
+                  onclick="event.stopPropagation(); openBorrowModal(${tool.id})" 
+                  class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-emerald-500 text-slate-200 hover:text-slate-950 text-xs font-bold border border-slate-700 hover:border-emerald-400 transition-all shadow-sm"
+                >
+                  Reserve
+                </button>
+              </div>
+
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================================
+    // 4. CARD 3D PERSPECTIVE PARALLAX TILT LOGIC
+    // ==========================================================
+    function handleCardTilt(e, card) {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      // Calculate rotation angles (subtle & responsive)
+      const rotateX = ((y - centerY) / centerY) * -9; // Max 9 deg
+      const rotateY = ((x - centerX) / centerX) * 9;
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
+      
+      // Specular glare positioning
+      const glare = card.querySelector('.tilt-glare');
+      if (glare) {
+        glare.style.opacity = '0.7';
+        glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.22) 0%, transparent 65%)`;
+      }
+    }
+
+    function resetCardTilt(card) {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      const glare = card.querySelector('.tilt-glare');
+      if (glare) {
+        glare.style.opacity = '0';
+      }
+    }
+
+    // ==========================================================
+    // 5. HERO 3D PARALLAX MOUSE MOVE LISTENER
+    // ==========================================================
+    const heroPlane = document.getElementById('heroPerspectivePlane');
+    const heroCenterCard = document.getElementById('heroCenterCard');
+
+    if (heroPlane && heroCenterCard) {
+      heroPlane.addEventListener('mousemove', (e) => {
+        const rect = heroPlane.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const tiltX = ((y - centerY) / centerY) * -12;
+        const tiltY = ((x - centerX) / centerX) * 12;
+
+        heroCenterCard.style.transform = `perspective(1200px) rotateX(${tiltX.toFixed(1)}deg) rotateY(${tiltY.toFixed(1)}deg) translateZ(10px)`;
+      });
+
+      heroPlane.addEventListener('mouseleave', () => {
+        heroCenterCard.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+      });
+    }
+
+    // ==========================================================
+    // 6. FILTER & SEARCH HANDLERS
+    // ==========================================================
+    function filterCategory(cat) {
+      activeCategory = cat;
+      // Update chip styles
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.classList.remove('bg-emerald-500', 'text-slate-950', 'shadow-glow-emerald', 'font-bold');
+        btn.classList.add('bg-slate-900', 'text-slate-300', 'font-medium');
+      });
+
+      const activeBtnMap = {
+        'All': 'btn-cat-all',
+        'Power': 'btn-cat-power',
+        'Woodworking': 'btn-cat-woodworking',
+        'Garden': 'btn-cat-garden',
+        'Automotive': 'btn-cat-automotive'
+      };
+
+      const activeBtn = document.getElementById(activeBtnMap[cat]);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-900', 'text-slate-300', 'font-medium');
+        activeBtn.classList.add('bg-emerald-500', 'text-slate-950', 'shadow-glow-emerald', 'font-bold');
+      }
+
+      // Update sidebar active state
+      document.querySelectorAll('#desktop-rail .nav-item').forEach(btn => {
+        btn.classList.remove('bg-slate-800/40', 'border-emerald-500/30', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+
+      renderToolsGrid();
+    }
+
+    function toggleAvailableOnly(val) {
+      availableOnly = val;
+      renderToolsGrid();
+    }
+
+    function filterDistrict(val) {
+      selectedSector = val;
+      renderToolsGrid();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.trim();
+      renderToolsGrid();
+    }
+
+    function resetAllFilters() {
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      availableOnly = false;
+      document.getElementById('availFilterToggle').checked = false;
+      selectedSector = 'all';
+      document.getElementById('districtSelect').value = 'all';
+      filterCategory('All');
+    }
+
+    function scrollToFilter() {
+      document.getElementById('equipment-grid').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Keyboard shortcut / for search
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+      }
+      if (e.key === 'Escape') {
+        closeToolDetailModal();
+        closeBorrowModal();
+        closeAddToolModal();
+      }
+    });
+
+    // ==========================================================
+    // 7. TOOL DETAIL MODAL & CONDITION TIMELINE
+    // ==========================================================
+    function openToolDetailModal(toolId) {
+      const tool = currentTools.find(t => t.id === toolId);
+      if (!tool) return;
+      activeModalTool = tool;
+
+      document.getElementById('modalCategoryBadge').textContent = tool.category.toUpperCase();
+      document.getElementById('modalStatusBadge').innerHTML = tool.status === 'available'
+        ? `<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-glow-emerald"></span><span>AVAILABLE TODAY</span>`
+        : `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>${tool.statusText}</span>`;
+      
+      document.getElementById('modalToolTitle').textContent = tool.title;
+      document.getElementById('modalToolSubtitle').textContent = tool.model;
+      document.getElementById('modalProximity').textContent = tool.proximity;
+      document.getElementById('modalSpecPower').textContent = tool.power || tool.specs;
+      document.getElementById('modalSpecCondition').textContent = tool.condition;
+      document.getElementById('modalSpecLoan').textContent = tool.maxDuration;
+      document.getElementById('modalOwnerInitials').textContent = tool.ownerInitials;
+      document.getElementById('modalOwnerName').textContent = tool.owner;
+      document.getElementById('modalOwnerStats').textContent = tool.ownerStats;
+      document.getElementById('modalTokenPreview').textContent = tool.token;
+
+      // Inject graphic
+      document.getElementById('modalToolGraphic').innerHTML = getToolSvgGraphic(tool.svgType, tool.customImg);
+
+      // Inject Condition Timeline
+      const timelineContainer = document.getElementById('modalConditionTimeline');
+      timelineContainer.innerHTML = tool.timeline.map((item, idx) => `
+        <div class="relative flex items-start gap-3">
+          <div class="w-4 h-4 rounded-full ${idx === 0 ? 'bg-emerald-500 shadow-glow-emerald' : 'bg-slate-700'} -ml-[23px] mt-0.5 border-2 border-cyber-900 shrink-0"></div>
+          <div>
+            <div class="text-xs font-bold text-white">${item.title}</div>
+            <div class="text-[10px] text-slate-400 font-mono">${item.date} • Logged by ${item.user}</div>
+          </div>
+        </div>
+      `).join('');
+
+      const modal = document.getElementById('toolDetailModal');
+      modal.classList.add('active');
+    }
+
+    function closeToolDetailModal() {
+      document.getElementById('toolDetailModal').classList.remove('active');
+    }
+
+    function openBorrowFromDetail() {
+      if (activeModalTool) {
+        closeToolDetailModal();
+        openBorrowModal(activeModalTool.id);
+      }
+    }
+
+    // ==========================================================
+    // 8. BORROW RESERVATION MODAL LOGIC
+    // ==========================================================
+    function openBorrowModal(toolId) {
+      const tool = currentTools.find(t => t.id === toolId);
+      if (!tool) return;
+      activeModalTool = tool;
+
+      document.getElementById('borrowToolTitle').textContent = tool.title;
+      document.getElementById('borrowToolLocation').textContent = `${tool.location} • Locker Access`;
+      
+      // Generate randomized live HMAC passcode for demonstration
+      const randomCode = Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('generatedPasscode').textContent = `${randomCode.toString().slice(0,3)}-${randomCode.toString().slice(3)}`;
+
+      selectDuration(1);
+      document.getElementById('borrowModal').classList.add('active');
+    }
+
+    function closeBorrowModal() {
+      document.getElementById('borrowModal').classList.remove('active');
+    }
+
+    function selectDuration(days) {
+      selectedDurationDays = days;
+      [1, 2, 3].forEach(d => {
+        const btn = document.getElementById(`dur-${d}`);
+        if (d === days) {
+          btn.classList.add('active', 'bg-emerald-500', 'text-slate-950', 'border-emerald-400', 'shadow-glow-emerald');
+          btn.classList.remove('bg-slate-800/80', 'text-slate-300', 'border-slate-700');
+        } else {
+          btn.classList.remove('active', 'bg-emerald-500', 'text-slate-950', 'border-emerald-400', 'shadow-glow-emerald');
+          btn.classList.add('bg-slate-800/80', 'text-slate-300', 'border-slate-700');
+        }
+      });
+    }
+
+    function submitReservation() {
+      const code = document.getElementById('generatedPasscode').textContent;
+      closeBorrowModal();
+      showToast(`Reservation Confirmed! Lockbox code ${code} issued for ${activeModalTool.title}.`, 'success');
+    }
+
+    // ==========================================================
+    // 9. ADD TOOL MODAL WITH LOCAL FILE UPLOAD (FILEREADER)
+    // ==========================================================
+    function openAddToolModal() {
+      document.getElementById('addToolModal').classList.add('active');
+    }
+
+    function closeAddToolModal() {
+      document.getElementById('addToolModal').classList.remove('active');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropZone').classList.add('border-emerald-400', 'bg-slate-900/90');
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropZone').classList.remove('border-emerald-400', 'bg-slate-900/90');
+    }
+
+    function handleFileDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropZone').classList.remove('border-emerald-400', 'bg-slate-900/90');
+      
+      const files = e.dataTransfer.files;
+      if (files && files[0]) {
+        processUploadedFile(files[0]);
+      }
+    }
+
+    function handleFileSelect(e) {
+      const files = e.target.files;
+      if (files && files[0]) {
+        processUploadedFile(files[0]);
+      }
+    }
+
+    function processUploadedFile(file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please upload a valid image file (PNG, JPG, WebP)', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        customUploadedImage = event.target.result;
+        document.getElementById('imagePreview').src = customUploadedImage;
+        document.getElementById('uploadFileName').textContent = file.name;
+        document.getElementById('uploadPlaceholder').classList.add('hidden');
+        document.getElementById('uploadPreviewContainer').classList.remove('hidden');
+        document.getElementById('uploadPreviewContainer').classList.add('flex');
+        showToast(`Loaded ${file.name} successfully`, 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearUploadedImage(e) {
+      e.stopPropagation();
+      customUploadedImage = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('imagePreview').src = '';
+      document.getElementById('uploadPreviewContainer').classList.add('hidden');
+      document.getElementById('uploadPreviewContainer').classList.remove('flex');
+      document.getElementById('uploadPlaceholder').classList.remove('hidden');
+    }
+
+    function handleCreateTool(e) {
+      e.preventDefault();
+
+      const title = document.getElementById('newToolTitle').value.trim();
+      const category = document.getElementById('newToolCategory').value;
+      const specs = document.getElementById('newToolSpecs').value.trim();
+      const condition = document.getElementById('newToolCondition').value;
+      const location = document.getElementById('newToolLocation').value.trim();
+      const maxDays = document.getElementById('newToolMaxDays').value;
+
+      const categoryLabels = {
+        'Power': 'Power & Cordless',
+        'Woodworking': 'Woodworking',
+        'Garden': 'Yard & Landscaping',
+        'Automotive': 'Automotive & Mechanics'
+      };
+
+      const newToolObj = {
+        id: Date.now(),
+        title: title,
+        model: `${title} - Community Equipment`,
+        category: categoryLabels[category] || 'Equipment',
+        categorySlug: category,
+        specs: specs,
+        power: specs,
+        condition: condition,
+        status: 'available',
+        statusText: 'AVAILABLE TODAY',
+        location: location,
+        proximity: '0.1 mi away (Your Listing)',
+        owner: 'You (Oakwood Member)',
+        ownerInitials: 'YOU',
+        ownerStats: 'New Listing • Verified Member',
+        maxDuration: maxDays,
+        token: `HMAC-OKW-${Math.floor(1000 + Math.random() * 9000)}`,
+        svgType: 'miterSaw', // fallback
+        customImg: customUploadedImage,
+        timeline: [
+          { date: 'Today', title: 'Tool listed on Oakwood LendLoop Mesh', user: 'You' }
+        ]
+      };
+
+      currentTools.unshift(newToolObj);
+      renderToolsGrid();
+      closeAddToolModal();
+
+      // Reset form
+      document.getElementById('addToolForm').reset();
+      clearUploadedImage(e);
+
+      showToast(`"${title}" is now live and available for neighbors to borrow!`, 'success');
+      
+      // Scroll to catalog
+      document.getElementById('equipment-grid').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ==========================================================
+    // 10. TOAST NOTIFICATION UTILITY
+    // ==========================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const borderColor = type === 'error' ? 'border-red-500' : 'border-emerald-500';
+      const icon = type === 'error' ? '⚠️' : '⚡';
+
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl bg-cyber-950/95 border ${borderColor} shadow-2xl glass-elevated flex items-center gap-3 text-xs text-white transform translate-y-4 opacity-0 transition-all duration-300 max-w-sm`;
+      toast.innerHTML = `
+        <span class="text-sm">${icon}</span>
+        <span class="font-medium">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 350);
+      }, 4500);
+    }
+
+    function showOwnerMessageToast() {
+      showToast('Secure messaging channel opened with Marcus Vance via Oakwood Relay.', 'info');
+    }
+
+    function showTrustModal() {
+      showToast('Oakwood Trust Protocol: Zero-fee, community-backed protection with $10k coverage pool.', 'info');
+    }
+
+    function showDistrictModal() {
+      showToast('Oakwood Mesh: 3 Smart Lockboxes active at Central Hub, North Green, and South Park.', 'info');
+    }
+
+    // Initialize application on load
+    document.addEventListener('DOMContentLoaded', () => {
+      renderToolsGrid();
+    });
+  </script>
+
+</body>
+</html>

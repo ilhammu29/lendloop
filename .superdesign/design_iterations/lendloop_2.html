@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LendLoop // Neighborhood Tool Sharing & Lending Protocol</title>
+  
+  <!-- Fonts: Inter & JetBrains Mono for Swiss Modernist & Architectural Precision -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            slate: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          },
+          spacing: {
+            '1': '4px',
+            '2': '8px',
+            '3': '12px',
+            '4': '16px',
+            '6': '24px',
+            '8': '32px',
+            '12': '48px',
+            '16': '64px',
+            '20': '80px',
+            '24': '96px',
+            '32': '128px',
+          },
+          boxShadow: {
+            'swiss': '0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05)',
+            'swiss-card': '0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04)',
+            'swiss-elevated': '0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)',
+            'swiss-modal': '0 25px 50px -12px rgba(15, 23, 42, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Swiss Architectural Grid Backgrounds */
+    .bg-grid-pattern {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(203, 213, 225, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(203, 213, 225, 0.4) 1px, transparent 1px);
+    }
+    .bg-grid-dense {
+      background-size: 16px 16px;
+      background-image: 
+        linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+    }
+    .bg-blueprint-cross {
+      background-image: radial-gradient(#94a3b8 0.75px, transparent 0.75px);
+      background-size: 16px 16px;
+    }
+
+    /* Custom smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Architectural hairline borders */
+    .border-hairline {
+      border-width: 1px;
+    }
+
+    /* Perspective layers */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+
+    /* Animations */
+    @keyframes pulseSlow {
+      0%, 100% { opacity: 0.9; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.98); }
+    }
+    .animate-pulse-slow {
+      animation: pulseSlow 4s ease-in-out infinite;
+    }
+
+    /* Hide scrollbar but allow scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Technical datum tick lines */
+    .datum-line {
+      position: relative;
+    }
+    .datum-line::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      bottom: -4px;
+      left: 0;
+      width: 2px;
+      background-color: #0f172a;
+    }
+  </style>
+</head>
+<body class="min-h-full font-sans antialiased text-slate-900 bg-slate-50 selection:bg-slate-900 selection:text-white flex flex-col">
+
+  <!-- Mobile Top Navigation Header -->
+  <header class="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-slate-900 flex items-center justify-center text-white font-mono font-bold text-sm tracking-tighter">
+        LL
+      </div>
+      <div>
+        <span class="font-mono font-bold text-sm tracking-wider uppercase">LENDLOOP</span>
+        <span class="block text-[10px] font-mono text-slate-500">DISTRICT 07 // PRECISION SHARING</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="mobile-add-btn" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-mono font-medium rounded-none hover:bg-slate-800 transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span>LIST</span>
+      </button>
+      <button id="mobile-menu-toggle" class="p-2 border border-slate-200 text-slate-800 hover:bg-slate-100 transition" aria-label="Toggle Navigation">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Responsive Architectural Sidebar (Icon-First 64px, expandable) -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full z-50 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out w-16 hover:w-64 -translate-x-full lg:translate-x-0 group shadow-swiss flex flex-col justify-between">
+    <!-- Brand Mark -->
+    <div>
+      <div class="h-16 flex items-center px-4 border-b border-slate-200 bg-slate-50/50">
+        <div class="w-8 h-8 bg-slate-900 flex-shrink-0 flex items-center justify-center text-white font-mono font-bold text-sm tracking-tighter shadow-sm">
+          LL
+        </div>
+        <div class="ml-4 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div class="font-mono font-bold text-sm tracking-wider text-slate-950 uppercase">LENDLOOP</div>
+          <div class="text-[9px] font-mono tracking-tight text-slate-500 uppercase">SYS V2.4 // SWISS SLATE</div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-2 space-y-1">
+        <a href="#catalog" class="flex items-center h-12 px-3 text-slate-900 bg-slate-100 font-medium border-l-2 border-slate-900 transition-colors">
+          <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <!-- Grid/Tools Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.75" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+            </svg>
+          </div>
+          <div class="ml-4 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <span class="text-xs font-mono font-semibold tracking-wide uppercase">TOOL REPOSITORY</span>
+          </div>
+        </a>
+
+        <a href="#metrics" class="flex items-center h-12 px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-l-2 border-transparent transition-colors">
+          <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <!-- Metrics/Telemetry Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.75" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <div class="ml-4 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <span class="text-xs font-mono font-semibold tracking-wide uppercase">CIRCULAR METRICS</span>
+          </div>
+        </a>
+
+        <a href="#lockers" class="flex items-center h-12 px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-l-2 border-transparent transition-colors">
+          <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <!-- Lockers/Depot Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.75" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <div class="ml-4 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <span class="text-xs font-mono font-semibold tracking-wide uppercase">DISTRICT LOCKERS</span>
+          </div>
+        </a>
+
+        <a href="#how-it-works" class="flex items-center h-12 px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-l-2 border-transparent transition-colors">
+          <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <!-- Shield Protocol Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.75" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <div class="ml-4 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <span class="text-xs font-mono font-semibold tracking-wide uppercase">CARE PROTOCOL</span>
+          </div>
+        </a>
+      </nav>
+
+      <!-- Precision Divider -->
+      <div class="mx-3 my-4 border-t border-slate-200"></div>
+
+      <!-- Quick Action / Add Tool -->
+      <div class="px-2">
+        <button id="sidebar-add-btn" class="w-full flex items-center h-10 px-3 bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm group/btn">
+          <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+          </div>
+          <div class="ml-4 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <span class="text-xs font-mono font-bold tracking-wide uppercase">REGISTER TOOL</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Specs / User Hub -->
+    <div class="border-t border-slate-200 bg-slate-50/70 p-3">
+      <div class="flex items-center">
+        <div class="w-8 h-8 rounded-none border border-slate-900 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">
+          MK
+        </div>
+        <div class="ml-3 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div class="text-xs font-mono font-bold text-slate-900">SECTOR 07-N</div>
+          <div class="text-[10px] font-mono text-slate-500">TRUST SCORE 99.8%</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Drawer Backdrop -->
+  <div id="mobile-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity"></div>
+
+  <!-- Main View Container (Offset for 64px sidebar on desktop) -->
+  <div class="flex-1 lg:pl-16 flex flex-col min-h-screen">
+    
+    <!-- Top System Header Status Bar -->
+    <section class="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <!-- District & Coordinates Datum -->
+        <div class="flex items-center gap-4 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-slate-900"></span>
+            <span class="font-bold tracking-wider text-slate-900 uppercase">ZONE: OAK &amp; 4TH // HUB 07</span>
+          </div>
+          <span class="hidden sm:inline text-slate-300">|</span>
+          <div class="hidden sm:flex items-center gap-2 text-slate-600">
+            <span>COORD: 45.5152° N, 122.6784° W</span>
+          </div>
+          <span class="hidden md:inline text-slate-300">|</span>
+          <div class="hidden md:flex items-center gap-1.5 text-slate-600">
+            <span class="inline-block w-1.5 h-1.5 bg-emerald-600 rounded-full animate-ping"></span>
+            <span class="text-slate-900 font-semibold">184 TOOLS ACTIVE</span>
+          </div>
+        </div>
+
+        <!-- Global Search & Direct Action -->
+        <div class="flex items-center gap-3">
+          <div class="relative hidden sm:block">
+            <input type="text" id="global-search-input" placeholder="Search spec, brand, model..." class="w-56 md:w-72 pl-8 pr-12 py-1.5 bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition">
+            <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <span class="absolute right-2 top-2 text-[10px] font-mono text-slate-400 border border-slate-200 px-1 bg-white">/</span>
+          </div>
+          
+          <button id="topbar-add-btn" class="px-4 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-mono font-medium tracking-wide flex items-center gap-2 transition shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span class="hidden sm:inline">REGISTER</span> TOOL
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Parallax Hero Section with Multi-layered Depth & Architectural Grid -->
+    <section id="hero-section" class="relative overflow-hidden bg-slate-50 border-b border-slate-200 py-16 sm:py-24 bg-grid-pattern">
+      <!-- Architectural Grid Backdrop Elements -->
+      <div class="absolute inset-0 pointer-events-none opacity-40 bg-blueprint-cross"></div>
+      
+      <!-- Coordinate Crosshairs & Corner Calibrations -->
+      <div class="absolute top-4 left-6 font-mono text-[10px] text-slate-400 select-none">
+        + REF: 00-GRID // SWISS SLATE INDEX
+      </div>
+      <div class="absolute top-4 right-6 font-mono text-[10px] text-slate-400 select-none hidden sm:block">
+        ELEVATION: +18m // DATUM 0.00
+      </div>
+      <div class="absolute bottom-4 left-6 font-mono text-[10px] text-slate-400 select-none hidden sm:block">
+        GRID-SPACING: 8pt STRICT MODULAR
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          <!-- Hero Text Column -->
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-white border border-slate-200 shadow-swiss font-mono text-xs text-slate-800">
+              <span class="w-2 h-2 bg-slate-900"></span>
+              <span class="font-bold tracking-wider">PROTOCOL 02 // ZERO CAPITAL IDLE HARDWARE</span>
+            </div>
+
+            <div class="space-y-2">
+              <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 font-sans leading-[1.05]">
+                NEIGHBORHOOD <br class="hidden sm:inline"/>
+                <span class="bg-gradient-to-r from-slate-950 via-slate-800 to-slate-900 bg-clip-text text-transparent">TOOL DEPOSITORY</span>
+              </h1>
+              <p class="font-mono text-xs sm:text-sm text-slate-600 tracking-wide max-w-xl leading-relaxed">
+                Architectural precision for local hardware access. Stop purchasing rarely used rotary hammers, tile cutters, and hedge trimmers. Borrow calibrated machinery from verified neighbors within 800 meters.
+              </p>
+            </div>
+
+            <!-- Quick Metrics Ticker -->
+            <div class="grid grid-cols-3 gap-3 pt-2 max-w-lg">
+              <div class="bg-white border border-slate-200 p-3 shadow-swiss">
+                <div class="text-[10px] font-mono text-slate-500 uppercase">Available Gear</div>
+                <div class="text-xl sm:text-2xl font-mono font-bold text-slate-900">342<span class="text-xs text-slate-400 font-normal ml-1">units</span></div>
+                <div class="text-[9px] font-mono text-slate-600 mt-1 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-slate-900 rounded-full"></span> 100% Calibrated
+                </div>
+              </div>
+
+              <div class="bg-white border border-slate-200 p-3 shadow-swiss">
+                <div class="text-[10px] font-mono text-slate-500 uppercase">Avg Retrieval</div>
+                <div class="text-xl sm:text-2xl font-mono font-bold text-slate-900">0.4<span class="text-xs text-slate-400 font-normal ml-1">miles</span></div>
+                <div class="text-[9px] font-mono text-slate-600 mt-1 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-slate-900 rounded-full"></span> Walking Radius
+                </div>
+              </div>
+
+              <div class="bg-white border border-slate-200 p-3 shadow-swiss">
+                <div class="text-[10px] font-mono text-slate-500 uppercase">Cap Saved</div>
+                <div class="text-xl sm:text-2xl font-mono font-bold text-slate-900">$48K<span class="text-xs text-slate-400 font-normal ml-1">YTD</span></div>
+                <div class="text-[9px] font-mono text-slate-600 mt-1 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-slate-900 rounded-full"></span> Mutual Benefit
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Triggers -->
+            <div class="pt-2 flex flex-wrap gap-3">
+              <a href="#catalog" class="px-6 py-3 bg-slate-900 hover:bg-black text-white text-xs font-mono font-semibold tracking-wider uppercase transition shadow-swiss flex items-center gap-2">
+                <span>INSPECT INVENTORY</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </a>
+              <button id="hero-list-btn" class="px-6 py-3 bg-white border border-slate-300 hover:border-slate-900 text-slate-900 text-xs font-mono font-semibold tracking-wider uppercase transition shadow-swiss flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>REGISTER MY TOOL</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Parallax Interactive Architectural Depth Stage -->
+          <div class="lg:col-span-5 perspective-1000 relative">
+            <!-- Floating Parallax Container controlled via JS mousemove -->
+            <div id="parallax-card" class="relative bg-white border border-slate-300 p-6 shadow-swiss-elevated transition-transform duration-150 ease-out transform-style-3d">
+              
+              <!-- Blueprint Spec Badge Header -->
+              <div class="flex items-center justify-between pb-3 border-b border-slate-200 font-mono text-[11px]">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 bg-slate-900 text-white font-bold">SPEC-01</span>
+                  <span class="text-slate-800 font-bold uppercase tracking-wider">LIVE TELEMETRY</span>
+                </div>
+                <span class="text-slate-500">ID: #LL-8820-DEW</span>
+              </div>
+
+              <!-- Technical SVG Tool Schematic Placeholder (Cordless Rotary Hammer Drill) -->
+              <div class="my-4 py-4 px-2 bg-slate-50 border border-slate-200 relative overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 bg-grid-dense opacity-60"></div>
+                <svg class="w-full h-44 relative z-10 text-slate-900" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Dimension Lines -->
+                  <line x1="20" y1="145" x2="280" y2="145" stroke="#94a3b8" stroke-dasharray="2 2" stroke-width="1"/>
+                  <line x1="20" y1="140" x2="20" y2="150" stroke="#0f172a" stroke-width="1"/>
+                  <line x1="280" y1="140" x2="280" y2="150" stroke="#0f172a" stroke-width="1"/>
+                  <text x="150" y="152" fill="#475569" font-family="monospace" font-size="8" text-anchor="middle">SPAN: 285mm</text>
+                  
+                  <!-- Drill Body Geometric Blueprint Drawing -->
+                  <path d="M40 70 L90 70 L90 40 L160 40 L180 55 L220 55 L220 75 L180 75 L170 95 L140 125 L110 125 L125 95 L90 95 L75 85 L40 85 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                  <!-- Chuck & Bit -->
+                  <rect x="220" y="60" width="30" height="10" fill="#0f172a" stroke="#0f172a" stroke-width="1.5"/>
+                  <line x1="250" y1="65" x2="295" y2="65" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+                  <!-- Battery Base Pack -->
+                  <path d="M95 125 L155 125 L160 140 L90 140 Z" fill="#0f172a" stroke="#0f172a" stroke-width="1.5"/>
+                  <!-- Trigger & Vents -->
+                  <path d="M125 75 L135 75 L135 85 L125 85 Z" fill="#0f172a"/>
+                  <line x1="105" y1="50" x2="145" y2="50" stroke="#64748b" stroke-width="1.5"/>
+                  <line x1="105" y1="55" x2="145" y2="55" stroke="#64748b" stroke-width="1.5"/>
+                  <line x1="105" y1="60" x2="145" y2="60" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Crosshair points -->
+                  <circle cx="160" cy="55" r="3" fill="none" stroke="#0f172a" stroke-width="1"/>
+                  <line x1="155" y1="55" x2="165" y2="55" stroke="#0f172a" stroke-width="1"/>
+                  <line x1="160" y1="50" x2="160" y2="60" stroke="#0f172a" stroke-width="1"/>
+                </svg>
+                
+                <!-- Overlay Tag -->
+                <div class="absolute bottom-2 right-2 px-2 py-0.5 bg-white border border-slate-300 font-mono text-[9px] text-slate-800 font-bold">
+                  20V MAX BRUSHLESS
+                </div>
+              </div>
+
+              <!-- Live Card Specifications -->
+              <div class="space-y-3 font-mono">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-sm font-bold text-slate-900 tracking-tight">DeWalt DCD996B Hammer Drill</h3>
+                    <p class="text-[11px] text-slate-500">Lender: Julian V. // 0.2 miles away</p>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-0.5 bg-slate-100 border border-slate-300 text-slate-900 text-[10px] font-bold">
+                    AVAILABLE NOW
+                  </span>
+                </div>
+
+                <!-- High-density Architectural Spec Matrix -->
+                <div class="grid grid-cols-2 gap-2 text-[10px] border-t border-b border-slate-200 py-2">
+                  <div class="flex justify-between pr-2 border-r border-slate-200">
+                    <span class="text-slate-500">MAX TORQUE:</span>
+                    <span class="font-bold text-slate-900">95 Nm</span>
+                  </div>
+                  <div class="flex justify-between pl-2">
+                    <span class="text-slate-500">BATTERY:</span>
+                    <span class="font-bold text-slate-900">2x 5.0Ah XR</span>
+                  </div>
+                  <div class="flex justify-between pr-2 border-r border-slate-200">
+                    <span class="text-slate-500">CONDITION:</span>
+                    <span class="font-bold text-slate-900">9.8 / 10.0</span>
+                  </div>
+                  <div class="flex justify-between pl-2">
+                    <span class="text-slate-500">LEND DEPOSIT:</span>
+                    <span class="font-bold text-slate-900">$0 (Community)</span>
+                  </div>
+                </div>
+
+                <div class="pt-1 flex items-center justify-between">
+                  <span class="text-[10px] text-slate-500">READY FOR 72H RESERVATION</span>
+                  <button onclick="openDetailModal('tool-1')" class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-mono font-medium tracking-wider uppercase transition">
+                    INSPECT SPECS
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Architectural Callout Badges (Multi-layered Parallax depth) -->
+            <div class="hidden sm:block absolute -top-5 -right-5 bg-white border border-slate-900 px-3 py-1.5 shadow-swiss font-mono text-[10px] font-bold tracking-wider uppercase text-slate-900">
+              [COMMUNITY DEPOSIT PROTOCOL: ACTIVE]
+            </div>
+            <div class="hidden sm:block absolute -bottom-4 -left-4 bg-slate-900 text-white px-3 py-1.5 font-mono text-[10px] tracking-wider uppercase shadow-swiss">
+              VERIFIED NEIGHBOR NETWORK
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Area: Filter Bar & Catalog -->
+    <main id="catalog" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      
+      <!-- Section Header with Swiss Architectural Eyebrow -->
+      <div class="border-b-2 border-slate-900 pb-4 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div class="font-mono text-xs font-bold text-slate-500 uppercase tracking-widest">
+            REGISTRY 01 // AVAILABLE INVENTORY
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 font-sans tracking-tight mt-1">
+            VERIFIED NEIGHBORHOOD HARDWARE
+          </h2>
+        </div>
+        
+        <!-- View Controls & Density Switcher -->
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <span class="text-slate-500 uppercase">SORT BY:</span>
+          <select id="sort-selector" class="bg-white border border-slate-200 px-3 py-1.5 text-xs font-mono font-medium text-slate-900 focus:outline-none focus:border-slate-900">
+            <option value="distance">PROXIMITY (CLOSEST FIRST)</option>
+            <option value="rating">CONDITION RATING (HIGHEST)</option>
+            <option value="power">HEAVY DUTY / POWER RATING</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- High-Density Filter Navigation Bar -->
+      <div class="mb-8 space-y-4">
+        <!-- Category Buttons Bar -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar font-mono text-xs">
+          <button class="filter-btn active px-3.5 py-2 bg-slate-900 text-white font-semibold whitespace-nowrap transition" data-category="all">
+            ALL GEAR [8]
+          </button>
+          <button class="filter-btn px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium whitespace-nowrap transition" data-category="power-tools">
+            POWER TOOLS [3]
+          </button>
+          <button class="filter-btn px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium whitespace-nowrap transition" data-category="woodworking">
+            WOODWORKING [2]
+          </button>
+          <button class="filter-btn px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium whitespace-nowrap transition" data-category="lawn-garden">
+            LAWN &amp; GARDEN [2]
+          </button>
+          <button class="filter-btn px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium whitespace-nowrap transition" data-category="measurement">
+            TEST &amp; MEASUREMENT [1]
+          </button>
+        </div>
+
+        <!-- Filter Sub-Options & Distance Radius Range -->
+        <div class="bg-white border border-slate-200 p-4 shadow-swiss flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500 uppercase">MAX RADIUS:</span>
+              <span id="radius-value" class="font-bold text-slate-900">1.2 MILES</span>
+              <input type="range" id="radius-slider" min="0.2" max="5.0" step="0.2" value="1.2" class="w-24 accent-slate-900 h-1 bg-slate-200">
+            </div>
+
+            <div class="h-4 w-px bg-slate-200 hidden sm:block"></div>
+
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="filter-instant" checked class="rounded-none accent-slate-900">
+              <span class="text-slate-700">READY FOR INSTANT BORROW</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="filter-nodeposit" class="rounded-none accent-slate-900">
+              <span class="text-slate-700">ZERO DEPOSIT WAIVER</span>
+            </label>
+          </div>
+
+          <div class="text-[11px] text-slate-500">
+            SHOWING <span id="filtered-count" class="font-bold text-slate-900">8</span> MATCHING HARDWARE UNITS
+          </div>
+        </div>
+      </div>
+
+      <!-- Hardware Catalog Grid (High-Density Architectural Swiss Layout) -->
+      <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+        <!-- Tool Card 1: DeWalt Cordless Drill -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="power-tools" data-tool-id="tool-1" data-distance="0.2" data-rating="9.8">
+          <div>
+            <!-- Header Spec Strip -->
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-8820 // POWER</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <path d="M20 50 L60 50 L60 30 L110 30 L120 40 L145 40 L145 55 L120 55 L115 70 L95 90 L75 90 L85 70 L60 70 L50 60 L20 60 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <rect x="145" y="44" width="12" height="7" fill="#0f172a"/>
+                <line x1="68" y1="90" x2="102" y2="90" stroke="#0f172a" stroke-width="4"/>
+                <line x1="75" y1="40" x2="105" y2="40" stroke="#64748b" stroke-width="1.5"/>
+                <line x1="75" y1="44" x2="105" y2="44" stroke="#64748b" stroke-width="1.5"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                SCALE 1:5 // 20V
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.2 MILES
+              </div>
+            </div>
+
+            <!-- Content Details -->
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">DEWALT XR SERIES</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">DCD996B 20V MAX Hammer Drill</h3>
+              </div>
+
+              <!-- Technical Metric Grid -->
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">CHUCK:</span> <span class="font-bold text-slate-800">1/2" Metal</span></div>
+                <div><span class="text-slate-500">BATT:</span> <span class="font-bold text-slate-800">2x 5.0Ah</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.8/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$0 Wvd</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Includes hard case, rapid charger, auxiliary handle, and assorted masonry/wood bits.
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Action Footer -->
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-1')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 2: Makita Sliding Compound Miter Saw -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="woodworking" data-tool-id="tool-2" data-distance="0.4" data-rating="9.6">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-4412 // TIMBER</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <!-- Miter Saw Geometry -->
+                <line x1="20" y1="95" x2="140" y2="95" stroke="#0f172a" stroke-width="3"/>
+                <rect x="50" y="80" width="60" height="15" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                <circle cx="80" cy="55" r="28" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <circle cx="80" cy="55" r="8" fill="#0f172a"/>
+                <line x1="80" y1="55" x2="120" y2="25" stroke="#0f172a" stroke-width="2"/>
+                <rect x="115" y="20" width="15" height="10" fill="#0f172a"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                BLADE 12" // LASER
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.4 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">MAKITA PRECISION</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">LS1219L 12" Dual-Bevel Miter Saw</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">BLADE:</span> <span class="font-bold text-slate-800">80T Finish</span></div>
+                <div><span class="text-slate-500">MOTOR:</span> <span class="font-bold text-slate-800">15.0 Amp</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.6/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$50 Rfn</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Crown molding stop, dust extraction bag, laser guide calibrated this month.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-2')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 3: Stihl Hedge Trimmer -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="lawn-garden" data-tool-id="tool-3" data-distance="0.3" data-rating="9.4">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-1930 // HORTICULTURE</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <!-- Hedge Trimmer Line Geometry -->
+                <rect x="25" y="45" width="45" height="30" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <path d="M70 55 L145 55 L145 65 L70 65 Z" fill="#0f172a"/>
+                <path d="M75 50 L85 55 L75 60 L85 65" stroke="#ffffff" stroke-width="1.5"/>
+                <path d="M95 50 L105 55 L95 60 L105 65" stroke="#ffffff" stroke-width="1.5"/>
+                <path d="M115 50 L125 55 L115 60 L125 65" stroke="#ffffff" stroke-width="1.5"/>
+                <path d="M15 55 L25 55" stroke="#0f172a" stroke-width="4"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                BLADE 24" // DUAL
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.3 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">STIHL AP SERIES</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">HSA 66 24" Cordless Hedge Trimmer</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">BLADE:</span> <span class="font-bold text-slate-800">24" Diamond</span></div>
+                <div><span class="text-slate-500">POWER:</span> <span class="font-bold text-slate-800">36V Lithium</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.4/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$0 Wvd</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Whisper quiet 36V motor. Includes AP 300 S battery and protective scabbard.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-3')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 4: Bosch SDS-Plus Rotary Hammer -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="power-tools" data-tool-id="tool-4" data-distance="0.6" data-rating="9.9">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-5521 // MASONRY</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <path d="M30 45 L90 45 L90 35 L120 35 L125 45 L140 45 L140 60 L125 60 L115 80 L90 85 L70 85 L75 65 L45 65 L35 55 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <line x1="140" y1="52" x2="155" y2="52" stroke="#0f172a" stroke-width="3"/>
+                <path d="M40 65 L30 100 L45 100 L55 65" fill="#0f172a"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                SDS-PLUS // 2.6 JOULES
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.6 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">BOSCH BULLDOG XTREME</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">GBH2-28L 1-1/8" Rotary Hammer</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">IMPACT:</span> <span class="font-bold text-slate-800">2.6 Joules</span></div>
+                <div><span class="text-slate-500">MOTOR:</span> <span class="font-bold text-slate-800">8.5 Amp</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.9/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$0 Wvd</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Vibration control handle, depth gauge, chiseling kit for tile removal & concrete anchors.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-4')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 5: Kärcher Electric Pressure Washer -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="lawn-garden" data-tool-id="tool-5" data-distance="0.5" data-rating="9.3">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-3301 // HYDRAULIC</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <rect x="55" y="30" width="50" height="60" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <circle cx="50" cy="85" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <circle cx="110" cy="85" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <path d="M80 30 L80 15 L95 15" stroke="#0f172a" stroke-width="3"/>
+                <line x1="105" y1="50" x2="135" y2="40" stroke="#0f172a" stroke-width="2"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                2000 PSI // 1.3 GPM
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.5 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">KÄRCHER GERMANY</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">K1900 2000 PSI Pressure Washer</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">PRESSURE:</span> <span class="font-bold text-slate-800">2000 PSI</span></div>
+                <div><span class="text-slate-500">FLOW:</span> <span class="font-bold text-slate-800">1.3 GPM</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.3/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$0 Wvd</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Includes surface deck cleaner attachment, 4 quick-connect nozzles, and 25ft kink-free hose.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-5')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 6: Fluke Industrial Multimeter -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="measurement" data-tool-id="tool-6" data-distance="0.1" data-rating="10.0">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-9002 // METROLOGY</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <rect x="50" y="20" width="60" height="85" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <rect x="60" y="30" width="40" height="20" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.5"/>
+                <circle cx="80" cy="68" r="10" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                <line x1="80" y1="68" x2="80" y2="62" stroke="#0f172a" stroke-width="2"/>
+                <circle cx="68" cy="90" r="3" fill="#0f172a"/>
+                <circle cx="80" cy="90" r="3" fill="#0f172a"/>
+                <circle cx="92" cy="90" r="3" fill="#0f172a"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                TRUE-RMS // CAT IV
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.1 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">FLUKE PRECISION</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">Fluke 87V True-RMS Multimeter</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">ACCURACY:</span> <span class="font-bold text-slate-800">0.05% DC</span></div>
+                <div><span class="text-slate-500">RATING:</span> <span class="font-bold text-slate-800">1000V CAT III</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">10.0/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$0 Wvd</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                NIST calibrated. Silicone test leads, alligator clips, temperature probe and magnetic hanging strap.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-6')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 7: Festool Track Saw -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="woodworking" data-tool-id="tool-7" data-distance="0.8" data-rating="9.7">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-6120 // JOINERY</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <rect x="20" y="80" width="120" height="8" fill="#0f172a"/>
+                <path d="M45 75 L115 75 L105 45 L65 45 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <circle cx="85" cy="60" r="16" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                <rect x="95" y="35" width="20" height="10" fill="#0f172a"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                55mm PLUNGE // 55" RAIL
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.8 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">FESTOOL GERMANY</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">TS 55 FEQ Plunge Cut Track Saw</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">DEPTH:</span> <span class="font-bold text-slate-800">55mm Max</span></div>
+                <div><span class="text-slate-500">TRACK:</span> <span class="font-bold text-slate-800">FS 1400/2</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.7/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$60 Rfn</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Zero-splinter cut quality. Includes splinterguard, 48T fine tooth blade, and dual quick clamps.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-7')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <!-- Tool Card 8: Milwaukee M18 Fuel Sawzall -->
+        <article class="tool-card bg-white border border-slate-200 hover:border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss" data-category="power-tools" data-tool-id="tool-8" data-distance="0.7" data-rating="9.5">
+          <div>
+            <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between font-mono text-[10px]">
+              <span class="font-bold text-slate-900 uppercase tracking-wider">#LL-2719 // DEMOLITION</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">AVAILABLE</span>
+            </div>
+
+            <!-- Blueprint SVG Vector Art Placeholder -->
+            <div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-slate-100/50 transition">
+              <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+              <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+                <path d="M25 60 L70 60 L125 55 L135 60 L125 65 L70 68 L35 75 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                <line x1="135" y1="60" x2="155" y2="60" stroke="#0f172a" stroke-width="2.5" stroke-dasharray="1 1"/>
+                <path d="M25 60 L15 85 L30 85 L35 75" fill="#0f172a"/>
+              </svg>
+              <div class="absolute bottom-2 left-2 font-mono text-[9px] text-slate-500">
+                1-1/8" STROKE // 3000 SPM
+              </div>
+              <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-white border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800">
+                0.7 MILES
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest block">MILWAUKEE FUEL</span>
+                <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">M18 FUEL Sawzall Reciprocating Saw</h3>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+                <div><span class="text-slate-500">STROKE:</span> <span class="font-bold text-slate-800">1-1/8 Inch</span></div>
+                <div><span class="text-slate-500">SPEED:</span> <span class="font-bold text-slate-800">3000 SPM</span></div>
+                <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">9.5/10</span></div>
+                <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">$0 Wvd</span></div>
+              </div>
+
+              <div class="text-[11px] text-slate-600 line-clamp-2">
+                Quik-Lok blade clamp, LED worklight, 5-pack pruning and metal cutting blades included.
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 pt-0 font-mono">
+            <button onclick="openDetailModal('tool-8')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+              <span>INSPECT &amp; BORROW</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+      </div>
+    </main>
+
+    <!-- Architecture & Community Protocol Specification Section -->
+    <section id="how-it-works" class="border-t border-slate-200 bg-white py-16 bg-grid-dense">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl mb-12">
+          <div class="font-mono text-xs font-bold text-slate-500 uppercase tracking-widest">
+            ARCHITECTURE 02 // PROTOCOL SPECIFICATION
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 font-sans tracking-tight mt-1">
+            HOW LENDLOOP OPERATES WITH PRECISION
+          </h2>
+          <p class="font-mono text-xs text-slate-600 mt-2">
+            No subscription bloat. No commercial markup. A community-governed hardware ledger backed by neighborhood trust and mutual accountability.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono">
+          <!-- Step 1 -->
+          <div class="border border-slate-200 bg-slate-50 p-6 relative">
+            <div class="text-xs font-bold text-slate-400 mb-2">01 // INSPECT &amp; SCHEDULE</div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 font-sans">Verify Tool Specifications</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Review calibrated condition ratings, included bit sets, and power ratings. Reserve a time window from 4 hours to 7 days with instantaneous neighbor notification.
+            </p>
+            <div class="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+              <span>LATENCY</span>
+              <span class="font-bold text-slate-900">&lt; 15 MIN CONFIRMATION</span>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="border border-slate-200 bg-slate-50 p-6 relative">
+            <div class="text-xs font-bold text-slate-400 mb-2">02 // SECURE LOCKER OR PORCH PICKUP</div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 font-sans">Zero Friction Handshake</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Retrieve tool from neighborhood hub locker or verified porch lockbox using your single-use cryptographic QR code or keypad PIN.
+            </p>
+            <div class="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+              <span>SECURITY</span>
+              <span class="font-bold text-slate-900">VERIFIED ID MATCH</span>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="border border-slate-200 bg-slate-50 p-6 relative">
+            <div class="text-xs font-bold text-slate-400 mb-2">03 // RETURN &amp; TELEMETRY LOG</div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 font-sans">Condition Re-Certification</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Wipe down tool, recharge batteries to 100%, and photograph condition at drop-off. Both parties confirm safe return and log community trust credit.
+            </p>
+            <div class="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+              <span>CIRCULARITY</span>
+              <span class="font-bold text-slate-900">99.8% SAFE RETURN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Swiss Architectural Precision Footer -->
+    <footer class="mt-auto border-t border-slate-200 bg-slate-900 text-white font-mono py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-800 text-xs">
+          <div class="space-y-3">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 bg-white text-slate-900 font-bold flex items-center justify-center text-xs">LL</div>
+              <span class="font-bold tracking-wider text-sm">LENDLOOP</span>
+            </div>
+            <p class="text-slate-400 text-[11px] leading-relaxed">
+              Decentralized neighborhood tool &amp; equipment depository system. Built on Swiss modernist grid tenets.
+            </p>
+          </div>
+
+          <div>
+            <div class="font-bold uppercase tracking-wider text-slate-300 mb-3 text-[11px]">DISTRICT HUBS</div>
+            <ul class="space-y-1.5 text-slate-400 text-[11px]">
+              <li>HUB 01 // NORTH PORTLAND</li>
+              <li>HUB 07 // MAPLE &amp; 4TH</li>
+              <li>HUB 12 // DOWNTOWN COMMONS</li>
+              <li>HUB 18 // EAST MEADOWS</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-bold uppercase tracking-wider text-slate-300 mb-3 text-[11px]">STANDARDS &amp; CARE</div>
+            <ul class="space-y-1.5 text-slate-400 text-[11px]">
+              <li>LITHIUM BATTERY PROTOCOL</li>
+              <li>CALIBRATION STANDARDS</li>
+              <li>ACCIDENTAL DAMAGE COVERAGE</li>
+              <li>COMMUNITY DISPUTE TRIBUNAL</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-bold uppercase tracking-wider text-slate-300 mb-3 text-[11px]">SYSTEM TELEMETRY</div>
+            <div class="bg-slate-950 p-3 border border-slate-800 text-[10px] space-y-1">
+              <div class="flex justify-between">
+                <span class="text-slate-500">NODE STATUS:</span>
+                <span class="text-emerald-400 font-bold">OPERATIONAL</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">GRID PRECISION:</span>
+                <span class="text-slate-300">4pt / 8pt STRICT</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">BUILD SPEC:</span>
+                <span class="text-slate-300">SWISS SLATE V2.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
+          <div>© 2026 LENDLOOP COOPERATIVE. ALL RIGHTS RESERVED. STRICT ENGLISH REGISTRY.</div>
+          <div class="flex gap-4">
+            <span class="hover:text-white cursor-pointer">PRIVACY MANIFEST</span>
+            <span class="hover:text-white cursor-pointer">TERMS OF USE</span>
+            <span class="hover:text-white cursor-pointer">COMMUNITY CONSTITUTION</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 1: High-Density Tool Specification & Borrow Request Modal/Drawer -->
+  <!-- ========================================================================= -->
+  <div id="detail-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop Blur -->
+    <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" onclick="closeDetailModal()"></div>
+
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
+      <div class="relative transform overflow-hidden bg-white text-left shadow-swiss-modal transition-all w-full max-w-4xl border border-slate-900">
+        
+        <!-- Modal Top System Header Bar -->
+        <div class="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between font-mono text-xs">
+          <div class="flex items-center gap-3">
+            <span class="w-2 h-2 bg-emerald-400"></span>
+            <span id="modal-tool-code" class="font-bold tracking-wider">#LL-8820 // TECHNICAL SPECIFICATION</span>
+          </div>
+          <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white p-1 transition" aria-label="Close modal">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body: High-Density Architectural Precision Layout -->
+        <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Tool Schematic & Condition Telemetry -->
+            <div class="lg:col-span-5 space-y-4">
+              <!-- Schematic Frame -->
+              <div class="bg-slate-50 border border-slate-200 p-4 relative overflow-hidden flex flex-col items-center justify-center">
+                <div class="absolute inset-0 bg-grid-dense opacity-40"></div>
+                <div id="modal-svg-container" class="w-full h-44 flex items-center justify-center relative z-10">
+                  <!-- Injected dynamically via JS -->
+                </div>
+                <div class="w-full flex justify-between items-center text-[10px] font-mono text-slate-500 border-t border-slate-200 pt-2 mt-2">
+                  <span>SCALE: 1:4 CAD VIEW</span>
+                  <span id="modal-serial" class="font-bold text-slate-900">SN: DEW-996-2024</span>
+                </div>
+              </div>
+
+              <!-- Condition Breakdown Score -->
+              <div class="bg-white border border-slate-200 p-4 font-mono space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900 uppercase">CONDITION AUDIT</span>
+                  <span id="modal-rating-pill" class="px-2 py-0.5 bg-slate-900 text-white text-xs font-bold">9.8 / 10.0</span>
+                </div>
+                
+                <!-- Progress Bars for Condition Specs -->
+                <div class="space-y-1.5 pt-2 text-[10px]">
+                  <div>
+                    <div class="flex justify-between text-slate-600 mb-0.5">
+                      <span>MOTOR &amp; GEARBOX EFFICIENCY</span>
+                      <span class="font-bold text-slate-900">99%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 overflow-hidden">
+                      <div class="h-full bg-slate-900 w-[99%]"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-slate-600 mb-0.5">
+                      <span>CHUCK RUNOUT / TOLERANCE</span>
+                      <span class="font-bold text-slate-900">&lt; 0.05 mm</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 overflow-hidden">
+                      <div class="h-full bg-slate-900 w-[96%]"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-slate-600 mb-0.5">
+                      <span>LITHIUM CELL HEALTH</span>
+                      <span class="font-bold text-slate-900">94% (18 CYCLES)</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 overflow-hidden">
+                      <div class="h-full bg-slate-900 w-[94%]"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-[10px] text-slate-500 pt-2 border-t border-slate-100">
+                  Last verified by District Inspector: 4 days ago.
+                </div>
+              </div>
+
+              <!-- Verified Owner Credentials -->
+              <div class="bg-slate-50 border border-slate-200 p-3 font-mono text-xs flex items-center gap-3">
+                <div class="w-9 h-9 bg-slate-900 text-white font-bold flex items-center justify-center flex-shrink-0">
+                  <span id="modal-owner-initials">JV</span>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="font-bold text-slate-900" id="modal-owner-name">Julian Vance</div>
+                  <div class="text-[10px] text-slate-500" id="modal-owner-meta">Neighborhood Steward • 54 Completed Lends</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Specs Matrix & Borrow Request Form -->
+            <div class="lg:col-span-7 space-y-6">
+              <!-- Title & Category -->
+              <div>
+                <span id="modal-category-tag" class="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">POWER TOOLS // INDUSTRIAL</span>
+                <h2 id="modal-tool-title" class="text-xl sm:text-2xl font-extrabold text-slate-950 font-sans tracking-tight">
+                  DeWalt DCD996B 20V MAX Hammer Drill
+                </h2>
+                <p id="modal-tool-desc" class="font-mono text-xs text-slate-600 mt-2 leading-relaxed">
+                  High performance 3-speed all-metal transmission optimizing tool-to-task for fast application speeds and improved run-time.
+                </p>
+              </div>
+
+              <!-- High-Density Specification Table -->
+              <div class="border border-slate-200">
+                <div class="bg-slate-100 px-3 py-1.5 border-b border-slate-200 font-mono text-[11px] font-bold text-slate-900 uppercase">
+                  MANUFACTURER BENCHMARK SPECIFICATIONS
+                </div>
+                <div id="modal-specs-table" class="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-slate-200 font-mono text-xs">
+                  <!-- Dynamically Populated via JS -->
+                </div>
+              </div>
+
+              <!-- Included Accessories Checklist -->
+              <div>
+                <div class="font-mono text-xs font-bold text-slate-900 uppercase mb-2">
+                  INCLUDED ACCESSORY MANIFEST
+                </div>
+                <div id="modal-accessories" class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+              <!-- Interactive Borrow Request Form -->
+              <form id="borrow-form" onsubmit="handleBorrowSubmit(event)" class="bg-slate-50 border border-slate-900 p-4 space-y-4 font-mono">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span class="text-xs font-bold text-slate-900 uppercase tracking-wide">REQUEST BORROW TIME WINDOW</span>
+                  <span class="text-[11px] text-slate-500">MAX: 7 DAYS</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label class="block text-slate-700 mb-1">PICKUP DATE:</label>
+                    <input type="date" id="borrow-start-date" required class="w-full bg-white border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900">
+                  </div>
+                  <div>
+                    <label class="block text-slate-700 mb-1">RETURN DATE:</label>
+                    <input type="date" id="borrow-end-date" required class="w-full bg-white border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs text-slate-700 mb-1">PROJECT SCOPE / INTENDED USE (BRIEF):</label>
+                  <input type="text" id="borrow-purpose" placeholder="e.g. Installing lag bolts in oak framing for backyard arbor" required class="w-full bg-white border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900">
+                </div>
+
+                <!-- Terms agreement -->
+                <div class="space-y-2 pt-1 text-[11px] text-slate-600">
+                  <label class="flex items-start gap-2 cursor-pointer select-none">
+                    <input type="checkbox" required class="mt-0.5 rounded-none accent-slate-900">
+                    <span>I agree to return tool wiped clean, batteries 100% recharged, and report any blade or bit dulling.</span>
+                  </label>
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-2 flex items-center justify-between gap-3">
+                  <div class="text-[11px]">
+                    <span class="text-slate-500">TOTAL FEE:</span>
+                    <span class="font-bold text-slate-900 ml-1">$0.00 (COMMUNITY)</span>
+                  </div>
+                  <button type="submit" class="px-6 py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-mono font-bold tracking-wider uppercase transition shadow-swiss flex items-center gap-2">
+                    <span>SUBMIT BORROW REQUEST</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </button>
+                </div>
+              </form>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 2: Register & Add Tool Form with Local FileReader Image Dropzone -->
+  <!-- ========================================================================= -->
+  <div id="add-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="add-modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" onclick="closeAddModal()"></div>
+
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
+      <div class="relative transform overflow-hidden bg-white text-left shadow-swiss-modal transition-all w-full max-w-2xl border border-slate-900">
+        
+        <!-- Modal Top System Header Bar -->
+        <div class="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between font-mono text-xs">
+          <div class="flex items-center gap-3">
+            <span class="w-2 h-2 bg-emerald-400"></span>
+            <span class="font-bold tracking-wider">REGISTRY ENTRY // ADD NEIGHBORHOOD TOOL</span>
+          </div>
+          <button onclick="closeAddModal()" class="text-slate-400 hover:text-white p-1 transition" aria-label="Close modal">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Add Tool Form -->
+        <form id="add-tool-form" onsubmit="handleAddToolSubmit(event)" class="p-4 sm:p-6 space-y-5 font-mono text-xs">
+          
+          <!-- Dropzone: FileReader Local Image Upload -->
+          <div>
+            <label class="block font-bold text-slate-900 uppercase mb-1">
+              LOCAL IMAGE ATTACHMENT (DROPZONE)
+            </label>
+            <div id="dropzone-area" class="border-2 border-dashed border-slate-300 hover:border-slate-900 bg-slate-50 transition p-6 flex flex-col items-center justify-center text-center cursor-pointer relative">
+              <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+              
+              <!-- Placeholder State -->
+              <div id="dropzone-empty" class="space-y-2">
+                <svg class="w-10 h-10 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <div class="font-bold text-slate-900 uppercase">
+                  DRAG &amp; DROP OR CLICK TO BROWSE IMAGE
+                </div>
+                <div class="text-[10px] text-slate-500">
+                  Instant local preview via browser FileReader (PNG, JPG, WEBP)
+                </div>
+              </div>
+
+              <!-- Preview State (Hidden by default) -->
+              <div id="dropzone-preview" class="hidden w-full flex flex-col items-center gap-3">
+                <div class="w-full max-h-56 overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                  <img id="preview-img" src="" alt="Tool Preview" class="max-h-52 object-contain">
+                </div>
+                <div class="flex items-center justify-between w-full text-[11px] bg-white border border-slate-200 p-2">
+                  <span id="preview-filename" class="font-bold text-slate-800 truncate max-w-xs">image.jpg</span>
+                  <span id="preview-filesize" class="text-slate-500">124 KB</span>
+                  <button type="button" id="remove-img-btn" class="text-red-600 hover:text-black font-bold uppercase ml-2">REMOVE</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Basic Tool Information -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-700 font-bold uppercase mb-1">BRAND &amp; MODEL NAME:</label>
+              <input type="text" id="add-title" placeholder="e.g. Milwaukee M18 FUEL 7-1/4 Circular Saw" required class="w-full bg-slate-50 border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+            </div>
+            <div>
+              <label class="block text-slate-700 font-bold uppercase mb-1">CATEGORY CLASSIFICATION:</label>
+              <select id="add-category" required class="w-full bg-slate-50 border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+                <option value="power-tools">POWER TOOLS (CORDLESS/CORDED)</option>
+                <option value="woodworking">WOODWORKING &amp; JOINERY</option>
+                <option value="lawn-garden">LAWN, TREE &amp; GARDEN</option>
+                <option value="measurement">TEST, ELECTRICAL &amp; MEASUREMENT</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Detailed Specifications Matrix -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-slate-700 font-bold uppercase mb-1">POWER SPEC:</label>
+              <input type="text" id="add-spec-power" placeholder="e.g. 18V / 5.0Ah or 15A" required class="w-full bg-slate-50 border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+            </div>
+            <div>
+              <label class="block text-slate-700 font-bold uppercase mb-1">MAX CAPACITY / DEPTH:</label>
+              <input type="text" id="add-spec-capacity" placeholder="e.g. 2-1/2 Inch Cut" required class="w-full bg-slate-50 border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+            </div>
+            <div>
+              <label class="block text-slate-700 font-bold uppercase mb-1">DEPOSIT REQUIRED:</label>
+              <select id="add-deposit" class="w-full bg-slate-50 border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white">
+                <option value="$0 (Community Trust)">$0 (COMMUNITY WAIVER)</option>
+                <option value="$25 Refundable">$25 REFUNDABLE</option>
+                <option value="$50 Refundable">$50 REFUNDABLE</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Condition Rating Slider -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="font-bold text-slate-700 uppercase">CONDITION RATING AUDIT:</label>
+              <span id="add-rating-display" class="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 border border-slate-300">9.5 / 10.0</span>
+            </div>
+            <input type="range" id="add-rating" min="7.0" max="10.0" step="0.1" value="9.5" class="w-full accent-slate-900 h-1.5 bg-slate-200">
+            <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+              <span>7.0 - WELL USED BUT SAFE</span>
+              <span>8.5 - GOOD COSMETIC</span>
+              <span>10.0 - MINT FACTORY CALIBRATED</span>
+            </div>
+          </div>
+
+          <!-- Description & Included Extras -->
+          <div>
+            <label class="block text-slate-700 font-bold uppercase mb-1">TOOL DESCRIPTION &amp; INCLUDED ACCESSORIES:</label>
+            <textarea id="add-desc" rows="3" placeholder="Includes hard case, carbide blade, wrench, and 2 batteries. Calibrated and cleaned." required class="w-full bg-slate-50 border border-slate-300 p-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white"></textarea>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="pt-2 border-t border-slate-200 flex items-center justify-end gap-3">
+            <button type="button" onclick="closeAddModal()" class="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-mono font-medium uppercase transition">
+              CANCEL
+            </button>
+            <button type="submit" class="px-6 py-2 bg-slate-900 hover:bg-black text-white text-xs font-mono font-bold uppercase tracking-wider transition shadow-swiss">
+              PUBLISH TO NEIGHBORHOOD
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <!-- ========================================================================= -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2 pointer-events-none">
+    <!-- Injected via showToast() -->
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: Full Interaction, Parallax, FileReader Dropzone, Modals -->
+  <!-- ========================================================================= -->
+  <script>
+    // Tool Dataset with High-Density Specs & Vector Placeholders
+    const toolsData = {
+      'tool-1': {
+        id: 'tool-1',
+        code: '#LL-8820 // POWER',
+        serial: 'SN: DEW-996-2024',
+        title: 'DeWalt DCD996B 20V MAX Hammer Drill',
+        category: 'power-tools',
+        categoryTag: 'POWER TOOLS // HEAVY DUTY DRILLING',
+        rating: 9.8,
+        distance: '0.2 miles',
+        owner: { name: 'Julian Vance', initials: 'JV', meta: 'Neighborhood Steward • 54 Completed Lends' },
+        description: 'High-performance 3-speed all-metal transmission optimizing tool-to-task for fast application speeds and improved run-time. Up to 2,250 RPM and 38,250 BPM for rapid drilling in masonry materials.',
+        specs: [
+          { label: 'MAX POWER', val: '820 UWO' },
+          { label: 'NO LOAD RPM', val: '0-2,000 RPM' },
+          { label: 'BLOWS/MIN', val: '38,250 BPM' },
+          { label: 'CHUCK SIZE', val: '1/2" Nitro-Carb' },
+          { label: 'CLUTCH SET', val: '11 Settings' },
+          { label: 'WEIGHT', val: '4.7 lbs' }
+        ],
+        accessories: [
+          '2x 20V MAX 5.0Ah XR Lithium Packs',
+          'DCB115 Multi-Voltage Rapid Charger',
+          '360° Auxiliary Side Handle',
+          'ToughSystem Compatible Hard Case',
+          'Masonry Carbide Bit Set (4-12mm)'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <path d="M20 50 L60 50 L60 30 L110 30 L120 40 L145 40 L145 55 L120 55 L115 70 L95 90 L75 90 L85 70 L60 70 L50 60 L20 60 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <rect x="145" y="44" width="12" height="7" fill="#0f172a"/>
+          <line x1="68" y1="90" x2="102" y2="90" stroke="#0f172a" stroke-width="4"/>
+          <line x1="75" y1="40" x2="105" y2="40" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="75" y1="44" x2="105" y2="44" stroke="#64748b" stroke-width="1.5"/>
+        </svg>`
+      },
+      'tool-2': {
+        id: 'tool-2',
+        code: '#LL-4412 // TIMBER',
+        serial: 'SN: MAK-1219-901',
+        title: 'Makita LS1219L 12" Dual-Bevel Miter Saw',
+        category: 'woodworking',
+        categoryTag: 'WOODWORKING // PRECISION MILLING',
+        rating: 9.6,
+        distance: '0.4 miles',
+        owner: { name: 'Claire Thorne', initials: 'CT', meta: 'Woodworking Guild Member • 31 Completed Lends' },
+        description: 'Unique 2-rail sliding system offers a reduced footprint for operation flush against a wall. Built-in laser clearly indicates line of cut for surgical crosscuts, miters, and bevels.',
+        specs: [
+          { label: 'BLADE DIA', val: '12" (305 mm)' },
+          { label: 'MOTOR', val: '15.0 Amp Direct' },
+          { label: 'BEVEL RANGE', val: '0° to 48° L & R' },
+          { label: 'MITER RANGE', val: '0° to 60° L & R' },
+          { label: 'NO LOAD RPM', val: '3,200 RPM' },
+          { label: 'WEIGHT', val: '65.0 lbs' }
+        ],
+        accessories: [
+          '80T Micro-Grain Carbide Fine Blade',
+          'Vertical Vise & Hold-down Clamp',
+          'Dust Bag & HEPA Vac Adapter',
+          'Triangular Rule for Calibrating 90°',
+          'Dual Extension Support Wings'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <line x1="20" y1="95" x2="140" y2="95" stroke="#0f172a" stroke-width="3"/>
+          <rect x="50" y="80" width="60" height="15" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+          <circle cx="80" cy="55" r="28" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="80" cy="55" r="8" fill="#0f172a"/>
+          <line x1="80" y1="55" x2="120" y2="25" stroke="#0f172a" stroke-width="2"/>
+          <rect x="115" y="20" width="15" height="10" fill="#0f172a"/>
+        </svg>`
+      },
+      'tool-3': {
+        id: 'tool-3',
+        code: '#LL-1930 // HORTICULTURE',
+        serial: 'SN: STL-66-8802',
+        title: 'Stihl HSA 66 24" Cordless Hedge Trimmer',
+        category: 'lawn-garden',
+        categoryTag: 'LAWN & GARDEN // PRO HEDGE ARCHITECTURE',
+        rating: 9.4,
+        distance: '0.3 miles',
+        owner: { name: 'David Lee', initials: 'DL', meta: 'Permaculture Designer • 22 Completed Lends' },
+        description: 'Commercial-grade battery hedge trimmer with high cutting power and constant stroke rate even when tackling thick branches. Diamond-ground cutter blades operate with zero emissions.',
+        specs: [
+          { label: 'BLADE LENGTH', val: '24" (600 mm)' },
+          { label: 'STROKE RATE', val: '3,100 SPM' },
+          { label: 'TOOTH SPACING', val: '30 mm' },
+          { label: 'BATTERY SYS', val: 'Stihl 36V AP' },
+          { label: 'SOUND LEVEL', val: '83 dB(A)' },
+          { label: 'WEIGHT', val: '6.8 lbs' }
+        ],
+        accessories: [
+          'Stihl AP 300 S 36V Lithium Battery',
+          'AL 300 Quick Charger',
+          'Blade Scabbard Cover',
+          'Silicone Resin Blade Lubricant Spray',
+          'Safety Face Shield & Leather Gloves'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <rect x="25" y="45" width="45" height="30" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <path d="M70 55 L145 55 L145 65 L70 65 Z" fill="#0f172a"/>
+          <path d="M75 50 L85 55 L75 60 L85 65" stroke="#ffffff" stroke-width="1.5"/>
+          <path d="M95 50 L105 55 L95 60 L105 65" stroke="#ffffff" stroke-width="1.5"/>
+          <path d="M115 50 L125 55 L115 60 L125 65" stroke="#ffffff" stroke-width="1.5"/>
+          <path d="M15 55 L25 55" stroke="#0f172a" stroke-width="4"/>
+        </svg>`
+      },
+      'tool-4': {
+        id: 'tool-4',
+        code: '#LL-5521 // MASONRY',
+        serial: 'SN: BSH-228-2023',
+        title: 'Bosch GBH2-28L 1-1/8" Rotary Hammer',
+        category: 'power-tools',
+        categoryTag: 'POWER TOOLS // STRUCTURAL CONCRETE',
+        rating: 9.9,
+        distance: '0.6 miles',
+        owner: { name: 'Sarah Tanaka', initials: 'ST', meta: 'Licensed Architect • 47 Completed Lends' },
+        description: 'The benchmark Bulldog Xtreme rotary hammer. Delivers 2.6 ft.-lbs. of impact energy for maximum performance in heavy-duty concrete drilling and chiseling applications.',
+        specs: [
+          { label: 'IMPACT ENERGY', val: '2.6 Ft-Lbs (3.5J)' },
+          { label: 'AMP RATING', val: '8.5 Amps' },
+          { label: 'NO LOAD RPM', val: '0-1,300 RPM' },
+          { label: 'NO LOAD BPM', val: '0-5,100 BPM' },
+          { label: 'MAX CAPACITY', val: '1-1/8" in Concrete' },
+          { label: 'WEIGHT', val: '6.9 lbs' }
+        ],
+        accessories: [
+          'Vibration Control Auxiliary Handle',
+          'Steel Depth Gauge Rod',
+          'Heavy-Duty Carrying Case',
+          'SDS-Plus Flat Chisel & Pointed Chisel',
+          'Dust Extraction Cup Attachment'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <path d="M30 45 L90 45 L90 35 L120 35 L125 45 L140 45 L140 60 L125 60 L115 80 L90 85 L70 85 L75 65 L45 65 L35 55 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <line x1="140" y1="52" x2="155" y2="52" stroke="#0f172a" stroke-width="3"/>
+          <path d="M40 65 L30 100 L45 100 L55 65" fill="#0f172a"/>
+        </svg>`
+      },
+      'tool-5': {
+        id: 'tool-5',
+        code: '#LL-3301 // HYDRAULIC',
+        serial: 'SN: KAR-1900-112',
+        title: 'Kärcher K1900 2000 PSI Pressure Washer',
+        category: 'lawn-garden',
+        categoryTag: 'CLEANING // HYDRAULIC SURFACE RESTORATION',
+        rating: 9.3,
+        distance: '0.5 miles',
+        owner: { name: 'Liam Patel', initials: 'LP', meta: 'Home Renovator • 19 Completed Lends' },
+        description: 'Engineered for exceptional cleaning performance and convenience. Features an induction motor that lasts up to 3X longer than typical universal motors with instant on/off switch.',
+        specs: [
+          { label: 'MAX PRESSURE', val: '2000 PSI' },
+          { label: 'FLOW RATE', val: '1.3 GPM' },
+          { label: 'MOTOR TYPE', val: 'Induction 120V' },
+          { label: 'HOSE LENGTH', val: '25 ft Kink-Free' },
+          { label: 'DETERGENT', val: 'Removable Tank' },
+          { label: 'WEIGHT', val: '31.0 lbs' }
+        ],
+        accessories: [
+          'Turbo Nozzle for Maximum Impact',
+          '15° & 40° Fan Spray Nozzles',
+          'Soap Dispenser Nozzle',
+          '11" Rotating Surface Deck Cleaner',
+          'Garden Hose Quick-Connect Coupler'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <rect x="55" y="30" width="50" height="60" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="50" cy="85" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="110" cy="85" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <path d="M80 30 L80 15 L95 15" stroke="#0f172a" stroke-width="3"/>
+          <line x1="105" y1="50" x2="135" y2="40" stroke="#0f172a" stroke-width="2"/>
+        </svg>`
+      },
+      'tool-6': {
+        id: 'tool-6',
+        code: '#LL-9002 // METROLOGY',
+        serial: 'SN: FLK-87V-8819',
+        title: 'Fluke 87V True-RMS Industrial Multimeter',
+        category: 'measurement',
+        categoryTag: 'TEST & MEASUREMENT // NIST CERTIFIED',
+        rating: 10.0,
+        distance: '0.1 miles',
+        owner: { name: 'Kenji Mori', initials: 'KM', meta: 'Senior Electrical Engineer • 62 Completed Lends' },
+        description: 'Industrial digital multimeter providing accurate voltage and frequency measurements on variable speed motor drives and noisy industrial electrical gear. 0.05% DC accuracy.',
+        specs: [
+          { label: 'DC ACCURACY', val: '0.05% + 1' },
+          { label: 'VOLTAGE AC/DC', val: 'Up to 1000V' },
+          { label: 'SAFETY RATING', val: 'CAT III 1000V' },
+          { label: 'BANDWIDTH', val: '20 kHz' },
+          { label: 'DISPLAY COUNT', val: '20,000 Counts' },
+          { label: 'WEIGHT', val: '1.3 lbs' }
+        ],
+        accessories: [
+          'TL75 Hard Point Test Lead Set',
+          'AC175 Threaded Alligator Clips',
+          '80BK-A DMM Temperature Probe',
+          'TPAK Magnetic Meter Hanging Strap',
+          'Certified Calibration Certificate Sheet'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <rect x="50" y="20" width="60" height="85" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <rect x="60" y="30" width="40" height="20" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.5"/>
+          <circle cx="80" cy="68" r="10" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+          <line x1="80" y1="68" x2="80" y2="62" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="68" cy="90" r="3" fill="#0f172a"/>
+          <circle cx="80" cy="90" r="3" fill="#0f172a"/>
+          <circle cx="92" cy="90" r="3" fill="#0f172a"/>
+        </svg>`
+      },
+      'tool-7': {
+        id: 'tool-7',
+        code: '#LL-6120 // JOINERY',
+        serial: 'SN: FST-TS55-903',
+        title: 'Festool TS 55 FEQ Plunge Cut Track Saw',
+        category: 'woodworking',
+        categoryTag: 'WOODWORKING // SHEET BREAKDOWN',
+        rating: 9.7,
+        distance: '0.8 miles',
+        owner: { name: 'Elena Rostova', initials: 'ER', meta: 'Cabinetmaker • 28 Completed Lends' },
+        description: 'Cuts splinter-free on both sides when paired with the guide rail. Slimline housing allows cuts close to walls (12 mm). FastFix blade change system for rapid swap.',
+        specs: [
+          { label: 'CUTTING DEPTH', val: '55 mm (2-1/8")' },
+          { label: 'SAW BLADE DIA', val: '160 mm (6-1/4")' },
+          { label: 'BEVEL RANGE', val: '-1° to 47°' },
+          { label: 'NO LOAD RPM', val: '2,000 - 5,800' },
+          { label: 'POWER CONSUMP', val: '1,200 Watts' },
+          { label: 'WEIGHT', val: '9.9 lbs' }
+        ],
+        accessories: [
+          'FS 1400/2 55" Extruded Guide Rail',
+          '48-Tooth Wood Fine Cut Saw Blade',
+          'Splinterguard Replacement Strip',
+          'FSZ 120 Fastening Clamps (Pair)',
+          'Systainer SYS3 M 337 Protective Case'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <rect x="20" y="80" width="120" height="8" fill="#0f172a"/>
+          <path d="M45 75 L115 75 L105 45 L65 45 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="85" cy="60" r="16" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+          <rect x="95" y="35" width="20" height="10" fill="#0f172a"/>
+        </svg>`
+      },
+      'tool-8': {
+        id: 'tool-8',
+        code: '#LL-2719 // DEMOLITION',
+        serial: 'SN: MLW-2719-771',
+        title: 'Milwaukee M18 FUEL Sawzall Reciprocating Saw',
+        category: 'power-tools',
+        categoryTag: 'POWER TOOLS // DEMOLITION & PRUNING',
+        rating: 9.5,
+        distance: '0.7 miles',
+        owner: { name: 'Marcus Keller', initials: 'MK', meta: 'Contractor • 43 Completed Lends' },
+        description: 'Cuts faster than its corded counterparts and offers up to 2x more run-time. The POWERSTATE brushless motor delivers cutting power that has only been associated with 15A tools.',
+        specs: [
+          { label: 'STROKE LENGTH', val: '1-1/8 Inch' },
+          { label: 'STROKES/MIN', val: '0-3,000 SPM' },
+          { label: 'BLADE CLAMP', val: 'QUIK-LOK Lever' },
+          { label: 'BATTERY SYS', val: 'M18 REDLITHIUM' },
+          { label: 'ADJUST SHOE', val: 'Keyless Pivoting' },
+          { label: 'WEIGHT', val: '7.4 lbs' }
+        ],
+        accessories: [
+          '2x M18 5.0Ah High Output Batteries',
+          'M12/M18 Multi-Voltage Fast Charger',
+          '5-Piece The AX & The TORCH Blade Kit',
+          'Heavy-Duty Blow Molded Case',
+          'ANSI Z87 Safety Glasses'
+        ],
+        svg: `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+          <path d="M25 60 L70 60 L125 55 L135 60 L125 65 L70 68 L35 75 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+          <line x1="135" y1="60" x2="155" y2="60" stroke="#0f172a" stroke-width="2.5" stroke-dasharray="1 1"/>
+          <path d="M25 60 L15 85 L30 85 L35 75" fill="#0f172a"/>
+        </svg>`
+      }
+    };
+
+    // Parallax Hero Mouse Tracking
+    const heroSection = document.getElementById('hero-section');
+    const parallaxCard = document.getElementById('parallax-card');
+
+    if (heroSection && parallaxCard) {
+      heroSection.addEventListener('mousemove', (e) => {
+        const rect = heroSection.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        
+        const rotateX = (-y / rect.height) * 12; // tilt angle
+        const rotateY = (x / rect.width) * 12;
+        
+        parallaxCard.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(10px)`;
+      });
+
+      heroSection.addEventListener('mouseleave', () => {
+        parallaxCard.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
+      });
+    }
+
+    // Modal Control Logic
+    function openDetailModal(toolId) {
+      const tool = toolsData[toolId];
+      if (!tool) return;
+
+      document.getElementById('modal-tool-code').textContent = tool.code;
+      document.getElementById('modal-serial').textContent = tool.serial;
+      document.getElementById('modal-tool-title').textContent = tool.title;
+      document.getElementById('modal-category-tag').textContent = tool.categoryTag;
+      document.getElementById('modal-tool-desc').textContent = tool.description;
+      document.getElementById('modal-rating-pill').textContent = `${tool.rating} / 10.0`;
+      document.getElementById('modal-owner-name').textContent = tool.owner.name;
+      document.getElementById('modal-owner-initials').textContent = tool.owner.initials;
+      document.getElementById('modal-owner-meta').textContent = tool.owner.meta;
+      document.getElementById('modal-svg-container').innerHTML = tool.svg;
+
+      // Populate Specs Table
+      const specsContainer = document.getElementById('modal-specs-table');
+      specsContainer.innerHTML = '';
+      tool.specs.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'p-2.5 bg-white';
+        div.innerHTML = `<span class="text-slate-500 block text-[10px] uppercase">${s.label}</span><span class="font-bold text-slate-900">${s.val}</span>`;
+        specsContainer.appendChild(div);
+      });
+
+      // Populate Accessories Manifest
+      const accContainer = document.getElementById('modal-accessories');
+      accContainer.innerHTML = '';
+      tool.accessories.forEach(acc => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-200';
+        item.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-slate-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span class="text-slate-800 text-[11px]">${acc}</span>
+        `;
+        accContainer.appendChild(item);
+      });
+
+      // Set default dates
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const returnDate = new Date(today);
+      returnDate.setDate(returnDate.getDate() + 3);
+
+      document.getElementById('borrow-start-date').value = tomorrow.toISOString().split('T')[0];
+      document.getElementById('borrow-end-date').value = returnDate.toISOString().split('T')[0];
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    // Add Tool Modal logic
+    function openAddModal() {
+      document.getElementById('add-modal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeAddModal() {
+      document.getElementById('add-modal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    // Attach Add Tool Triggers
+    document.getElementById('topbar-add-btn')?.addEventListener('click', openAddModal);
+    document.getElementById('sidebar-add-btn')?.addEventListener('click', openAddModal);
+    document.getElementById('mobile-add-btn')?.addEventListener('click', openAddModal);
+    document.getElementById('hero-list-btn')?.addEventListener('click', openAddModal);
+
+    // FileReader Dropzone Implementation
+    const dropzoneArea = document.getElementById('dropzone-area');
+    const fileInput = document.getElementById('file-input');
+    const dropzoneEmpty = document.getElementById('dropzone-empty');
+    const dropzonePreview = document.getElementById('dropzone-preview');
+    const previewImg = document.getElementById('preview-img');
+    const previewFilename = document.getElementById('preview-filename');
+    const previewFilesize = document.getElementById('preview-filesize');
+    const removeImgBtn = document.getElementById('remove-img-btn');
+
+    let currentImageDataUrl = null;
+
+    function handleFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Invalid File', 'Please select a valid image file (PNG, JPG, WEBP).', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        currentImageDataUrl = e.target.result;
+        previewImg.src = currentImageDataUrl;
+        previewFilename.textContent = file.name;
+        previewFilesize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+        
+        dropzoneEmpty.classList.add('hidden');
+        dropzonePreview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    fileInput?.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzoneArea?.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzoneArea.classList.add('border-slate-900', 'bg-slate-100');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzoneArea?.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzoneArea.classList.remove('border-slate-900', 'bg-slate-100');
+      });
+    });
+
+    dropzoneArea?.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt.files && dt.files[0]) {
+        handleFile(dt.files[0]);
+      }
+    });
+
+    removeImgBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentImageDataUrl = null;
+      fileInput.value = '';
+      previewImg.src = '';
+      dropzonePreview.classList.add('hidden');
+      dropzoneEmpty.classList.remove('hidden');
+    });
+
+    // Rating Slider display sync
+    const addRatingSlider = document.getElementById('add-rating');
+    const addRatingDisplay = document.getElementById('add-rating-display');
+    addRatingSlider?.addEventListener('input', (e) => {
+      addRatingDisplay.textContent = `${parseFloat(e.target.value).toFixed(1)} / 10.0`;
+    });
+
+    // Handle Borrow Request Submit
+    function handleBorrowSubmit(e) {
+      e.preventDefault();
+      const start = document.getElementById('borrow-start-date').value;
+      const end = document.getElementById('borrow-end-date').value;
+      const title = document.getElementById('modal-tool-title').textContent;
+
+      closeDetailModal();
+      showToast('Reservation Registered', `Borrow request for "${title}" scheduled for ${start} through ${end}. Neighbor notified.`, 'success');
+    }
+
+    // Handle Add Tool Submit
+    function handleAddToolSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('add-title').value.trim();
+      const category = document.getElementById('add-category').value;
+      const power = document.getElementById('add-spec-power').value.trim();
+      const capacity = document.getElementById('add-spec-capacity').value.trim();
+      const deposit = document.getElementById('add-deposit').value;
+      const rating = parseFloat(document.getElementById('add-rating').value).toFixed(1);
+      const desc = document.getElementById('add-desc').value.trim();
+
+      const newId = `tool-custom-${Date.now()}`;
+      const newCode = `#LL-${Math.floor(1000 + Math.random() * 9000)} // LOCAL`;
+
+      // Save into toolsData
+      toolsData[newId] = {
+        id: newId,
+        code: newCode,
+        serial: `SN: LOC-${Math.floor(1000 + Math.random() * 9000)}`,
+        title: title,
+        category: category,
+        categoryTag: `${category.toUpperCase().replace('-', ' ')} // NEIGHBOR REGISTRY`,
+        rating: rating,
+        distance: '0.1 miles',
+        owner: { name: 'You (Current Resident)', initials: 'ME', meta: 'District Registered Resident' },
+        description: desc,
+        specs: [
+          { label: 'POWER SPEC', val: power },
+          { label: 'CAPACITY', val: capacity },
+          { label: 'CONDITION', val: `${rating}/10` },
+          { label: 'DEPOSIT', val: deposit },
+          { label: 'HUB ZONE', val: 'Sector 07' },
+          { label: 'STATUS', val: 'Calibrated' }
+        ],
+        accessories: [
+          'Primary unit with original safety guards',
+          'Batteries or power cord inspected',
+          'Clean storage case'
+        ],
+        svg: currentImageDataUrl ? 
+          `<img src="${currentImageDataUrl}" alt="${title}" class="max-h-32 object-contain mx-auto">` :
+          `<svg class="w-48 h-36 text-slate-800" viewBox="0 0 160 120" fill="none">
+            <rect x="40" y="35" width="80" height="50" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+            <path d="M40 50 L120 50" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="80" y="65" fill="#0f172a" font-family="monospace" font-size="10" text-anchor="middle">NEW TOOL</text>
+          </svg>`
+      };
+
+      // Create card element and prepend to grid
+      const toolsGrid = document.getElementById('tools-grid');
+      const article = document.createElement('article');
+      article.className = 'tool-card bg-white border border-slate-900 transition-all duration-200 flex flex-col justify-between group shadow-swiss animate-pulse-slow';
+      article.setAttribute('data-category', category);
+      article.setAttribute('data-tool-id', newId);
+      article.setAttribute('data-distance', '0.1');
+      article.setAttribute('data-rating', rating);
+
+      const previewSnippet = currentImageDataUrl ? 
+        `<div class="h-44 bg-slate-50 border-b border-slate-200 p-2 flex items-center justify-center relative overflow-hidden">
+          <img src="${currentImageDataUrl}" alt="${title}" class="max-h-40 max-w-full object-contain">
+          <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-slate-900 text-white px-1.5 py-0.5 font-bold">JUST LISTED</div>
+        </div>` :
+        `<div class="h-44 bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-center relative overflow-hidden">
+          <div class="absolute inset-0 bg-blueprint-cross opacity-30"></div>
+          <svg class="w-36 h-28 text-slate-800" viewBox="0 0 160 120" fill="none">
+            <rect x="40" y="35" width="80" height="50" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+            <path d="M40 50 L120 50" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="80" y="65" fill="#0f172a" font-family="monospace" font-size="9" text-anchor="middle">${power}</text>
+          </svg>
+          <div class="absolute bottom-2 right-2 font-mono text-[9px] bg-slate-900 text-white px-1.5 py-0.5 font-bold">JUST LISTED</div>
+        </div>`;
+
+      article.innerHTML = `
+        <div>
+          <div class="p-3 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between font-mono text-[10px]">
+            <span class="font-bold uppercase tracking-wider">${newCode}</span>
+            <span class="px-1.5 py-0.5 bg-emerald-400 text-slate-950 font-bold">AVAILABLE</span>
+          </div>
+          ${previewSnippet}
+          <div class="p-4 space-y-3 font-mono">
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase tracking-widest block">${category.toUpperCase()}</span>
+              <h3 class="font-bold text-slate-950 text-sm tracking-tight leading-snug">${title}</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-1 text-[10px] border-t border-b border-slate-100 py-2">
+              <div><span class="text-slate-500">SPEC:</span> <span class="font-bold text-slate-800">${power}</span></div>
+              <div><span class="text-slate-500">CAP:</span> <span class="font-bold text-slate-800">${capacity}</span></div>
+              <div><span class="text-slate-500">CONDITION:</span> <span class="font-bold text-slate-800">${rating}/10</span></div>
+              <div><span class="text-slate-500">DEPOSIT:</span> <span class="font-bold text-slate-800">${deposit.split(' ')[0]}</span></div>
+            </div>
+            <div class="text-[11px] text-slate-600 line-clamp-2">${desc}</div>
+          </div>
+        </div>
+        <div class="p-4 pt-0 font-mono">
+          <button onclick="openDetailModal('${newId}')" class="w-full py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+            <span>INSPECT &amp; BORROW</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      toolsGrid.prepend(article);
+      
+      // Reset form and close
+      document.getElementById('add-tool-form').reset();
+      currentImageDataUrl = null;
+      previewImg.src = '';
+      dropzonePreview.classList.add('hidden');
+      dropzoneEmpty.classList.remove('hidden');
+      closeAddModal();
+
+      updateCounts();
+      showToast('Tool Registered', `"${title}" is now publicly cataloged in Sector 07.`, 'success');
+    }
+
+    // Category Filtering Logic
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const toolCards = document.querySelectorAll('.tool-card');
+
+    function applyFilters() {
+      const activeBtn = document.querySelector('.filter-btn.active');
+      const activeCategory = activeBtn ? activeBtn.getAttribute('data-category') : 'all';
+      const maxRadius = parseFloat(document.getElementById('radius-slider')?.value || '5.0');
+      const searchTerm = document.getElementById('global-search-input')?.value.toLowerCase().trim() || '';
+
+      let count = 0;
+      const allCards = document.querySelectorAll('.tool-card');
+      allCards.forEach(card => {
+        const cat = card.getAttribute('data-category');
+        const dist = parseFloat(card.getAttribute('data-distance') || '0');
+        const text = card.textContent.toLowerCase();
+
+        const matchCat = (activeCategory === 'all' || cat === activeCategory);
+        const matchDist = dist <= maxRadius;
+        const matchSearch = searchTerm === '' || text.includes(searchTerm);
+
+        if (matchCat && matchDist && matchSearch) {
+          card.classList.remove('hidden');
+          count++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      const countDisplay = document.getElementById('filtered-count');
+      if (countDisplay) countDisplay.textContent = count;
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('active', 'bg-slate-900', 'text-white', 'font-semibold');
+          b.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
+        });
+        btn.classList.add('active', 'bg-slate-900', 'text-white', 'font-semibold');
+        btn.classList.remove('bg-white', 'text-slate-700', 'border');
+        applyFilters();
+      });
+    });
+
+    // Radius Slider Listener
+    const radiusSlider = document.getElementById('radius-slider');
+    const radiusValue = document.getElementById('radius-value');
+    radiusSlider?.addEventListener('input', (e) => {
+      radiusValue.textContent = `${parseFloat(e.target.value).toFixed(1)} MILES`;
+      applyFilters();
+    });
+
+    // Global Search Listener
+    document.getElementById('global-search-input')?.addEventListener('input', applyFilters);
+
+    function updateCounts() {
+      applyFilters();
+    }
+
+    // Toast Notification System
+    function showToast(title, message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto bg-slate-900 text-white border-l-4 border-slate-100 p-4 shadow-swiss-elevated font-mono text-xs max-w-sm transform transition-all duration-300 translate-y-2 opacity-0 flex items-start gap-3';
+      
+      const icon = type === 'success' ? 
+        `<svg class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>` :
+        `<svg class="w-4 h-4 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+      toast.innerHTML = `
+        ${icon}
+        <div class="flex-1">
+          <div class="font-bold tracking-wide uppercase">${title}</div>
+          <div class="text-[11px] text-slate-300 mt-1 leading-snug">${message}</div>
+        </div>
+      `;
+
+      container.appendChild(toast);
+
+      // Trigger entrance
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      // Auto dismiss after 4 seconds
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Mobile Drawer Logic
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const mobileBackdrop = document.getElementById('mobile-backdrop');
+
+    function toggleMobileMenu() {
+      const isClosed = sidebar.classList.contains('-translate-x-full');
+      if (isClosed) {
+        sidebar.classList.remove('-translate-x-full', 'w-16');
+        sidebar.classList.add('w-64');
+        mobileBackdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.remove('w-64');
+        sidebar.classList.add('w-16');
+        mobileBackdrop.classList.add('hidden');
+      }
+    }
+
+    mobileMenuToggle?.addEventListener('click', toggleMobileMenu);
+    mobileBackdrop?.addEventListener('click', toggleMobileMenu);
+
+    // Keyboard Hotkey "/" to jump to search
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        const searchInput = document.getElementById('global-search-input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+      if (e.key === 'Escape') {
+        closeDetailModal();
+        closeAddModal();
+      }
+    });
+
+  </script>
+</body>
+</html>

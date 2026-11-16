@@ -29,10 +29,10 @@ export default function RootLayout({
                 </p>
                 <div className="flex items-center gap-6 text-slate-600 font-medium">
                   <a href="/dashboard" className="hover:text-slate-900 transition-colors">
-                    Katalog
+                    Catalog
                   </a>
                   <a href="/requests" className="hover:text-slate-900 transition-colors">
-                    Permintaan
+                    Requests
                   </a>
                   <a href="/admin" className="hover:text-slate-900 transition-colors">
                     Admin
