@@ -17,6 +17,8 @@ services:
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
       - LENDLOOP_WEBHOOK_SECRET=${LENDLOOP_WEBHOOK_SECRET:-lendloop_shared_hmac_secret_2026}
       - CONVEX_SITE_URL=${CONVEX_SITE_URL:-http://localhost:3000}
+      - NODE_FUNCTION_ALLOW_BUILTIN=crypto,buffer
+      - NODE_FUNCTION_ALLOW_EXTERNAL=*
     volumes:
       - n8n_data:/home/node/.n8n
 

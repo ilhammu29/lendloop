@@ -42,6 +42,7 @@ All secrets are kept strictly in environment variables and n8n credentials, **ne
 
 - **`LENDLOOP_WEBHOOK_SECRET`**: Shared secret used for bidirectional HMAC-SHA256 signature generation and verification.
 - **`CONVEX_SITE_URL`**: Base URL of the Convex HTTP site (e.g., `https://your-convex-deployment.convex.site` or `http://localhost:3000`).
+- **`NODE_FUNCTION_ALLOW_BUILTIN`**: Set to `crypto,buffer` (included in `docker-compose.yml`). *Note: All LendLoop Code nodes include an automatic pure-JS fallback, ensuring they execute without error even in restricted n8n sandboxes where built-in modules are disallowed.*
 
 ---
 

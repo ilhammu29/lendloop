@@ -12,18 +12,24 @@
       "name": "Convex Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "lendloop-request-notification"
     },
     {
       "parameters": {
-        "jsCode": "// Verify HMAC-SHA256 Signature & Apply Data Minimization\nconst crypto = require('crypto');\n\nconst rawBody = $input.item.json;\nconst headers = $input.item.headers || {};\nconst signatureHeader = headers['x-lendloop-signature'] || headers['X-LendLoop-Signature'] || '';\n\n// Retrieve shared secret from n8n environment variables (Never hardcoded)\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET || 'lendloop_shared_hmac_secret_2026';\n\n// Compute HMAC\nconst payloadString = JSON.stringify(rawBody);\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(payloadString);\nconst computedSignature = hmac.digest('hex');\n\n// Validate signature with timing-safe comparison\nlet isValid = false;\ntry {\n  const sigClean = signatureHeader.startsWith('sha256=') ? signatureHeader.slice(7) : signatureHeader;\n  const bufA = Buffer.from(sigClean, 'hex');\n  const bufB = Buffer.from(computedSignature, 'hex');\n  isValid = bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);\n} catch (e) {\n  isValid = false;\n}\n\nif (!isValid && process.env.NODE_ENV === 'production') {\n  throw new Error('HMAC Signature Verification Failed: Unauthorized webhook payload.');\n}\n\n// Data Minimization: extract only the minimal fields needed for notification\nconst event = rawBody.event || 'notification';\nconst toolName = rawBody.toolName || 'Tool';\nconst recipientEmail = rawBody.recipientEmail || '';\nconst recipientName = rawBody.recipientName || 'Neighbor';\nconst status = rawBody.status || 'updated';\nconst startDate = rawBody.startDate || '';\nconst endDate = rawBody.endDate || '';\n\nlet subject = '';\nlet message = '';\n\nif (event === 'borrow_request_created') {\n  subject = `[LendLoop] New borrow request for your ${toolName}!`;\n  message = `Hello ${recipientName}, a neighbor has requested to borrow your ${toolName} from ${startDate} to ${endDate}. Please visit LendLoop to approve or decline.`;\n} else {\n  subject = `[LendLoop] Borrow request update: ${toolName}`;\n  message = `Hello ${recipientName}, your borrow request for ${toolName} has been marked as: ${status.toUpperCase()}.`;\n}\n\nreturn [{\n  json: {\n    verified: true,\n    event,\n    recipientEmail,\n    recipientName,\n    toolName,\n    status,\n    subject,\n    message,\n    dispatchedAt: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// Verify HMAC-SHA256 Signature & Apply Data Minimization\nfunction computeHmacSha256(secret, message) {\n  try {\n    const crypto = require(\"crypto\");\n    return crypto.createHmac(\"sha256\", secret).update(message).digest(\"hex\");\n  } catch (err) {\n    function utf8Bytes(str) {\n      var out = [], p = 0;\n      for (var i = 0; i < str.length; i++) {\n        var c = str.charCodeAt(i);\n        if (c < 128) out[p++] = c;\n        else if (c < 2048) { out[p++] = (c >> 6) | 192; out[p++] = (c & 63) | 128; }\n        else if (((c & 0xFC00) === 0xD800) && (i + 1) < str.length && ((str.charCodeAt(i + 1) & 0xFC00) === 0xDC00)) {\n          c = 0x10000 + ((c & 0x03FF) << 10) + (str.charCodeAt(++i) & 0x03FF);\n          out[p++] = (c >> 18) | 240; out[p++] = ((c >> 12) & 63) | 128; out[p++] = ((c >> 6) & 63) | 128; out[p++] = (c & 63) | 128;\n        } else { out[p++] = (c >> 12) | 224; out[p++] = ((c >> 6) & 63) | 128; out[p++] = (c & 63) | 128; }\n      }\n      return out;\n    }\n    function sha256(bytes) {\n      function rotr(v, a) { return (v >>> a) | (v << (32 - a)); }\n      var mathPow = Math.pow, maxWord = mathPow(2, 32);\n      var i, j, words = [], bitLength = bytes.length * 8, hash = [], k = [], primeCounter = 0, isComposite = {};\n      for (var candidate = 2; primeCounter < 64; candidate++) {\n        if (!isComposite[candidate]) {\n          for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;\n          hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n          k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n        }\n      }\n      var padded = Array.from(bytes);\n      padded.push(0x80);\n      while ((padded.length % 64) !== 56) padded.push(0);\n      for (i = 0; i < padded.length; i++) words[i >> 2] |= padded[i] << (((3 - i) % 4) * 8);\n      words[words.length] = (bitLength / maxWord) | 0;\n      words[words.length] = bitLength | 0;\n      for (j = 0; j < words.length; ) {\n        var w = words.slice(j, (j += 16)), oldHash = hash;\n        hash = hash.slice(0, 8);\n        for (i = 0; i < 64; i++) {\n          var w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];\n          var temp1 = hash[7] + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & hash[5]) ^ (~e & hash[6])) + k[i] + (w[i] = i < 16 ? w[i] : (w[i - 16] + (rotr(w15, 7) ^ rotr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rotr(w2, 17) ^ rotr(w2, 19) ^ (w2 >>> 10))) | 0);\n          var temp2 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n          hash = [(temp1 + temp2) | 0].concat(hash);\n          hash[4] = (hash[4] + temp1) | 0;\n        }\n        for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;\n      }\n      var out = [];\n      for (i = 0; i < 8; i++) for (var b = 3; b >= 0; b--) out.push((hash[i] >> (8 * b)) & 255);\n      return out;\n    }\n    var keyBytes = utf8Bytes(secret), msgBytes = utf8Bytes(message);\n    if (keyBytes.length > 64) keyBytes = sha256(keyBytes);\n    while (keyBytes.length < 64) keyBytes.push(0);\n    var oKey = [], iKey = [];\n    for (var idx = 0; idx < 64; idx++) { oKey[idx] = keyBytes[idx] ^ 0x5c; iKey[idx] = keyBytes[idx] ^ 0x36; }\n    var inner = sha256(iKey.concat(msgBytes));\n    var outer = sha256(oKey.concat(inner));\n    return outer.map(function(b) { return (b < 16 ? \"0\" : \"\") + b.toString(16); }).join(\"\");\n  }\n}\n\nfunction constantTimeEqual(a, b) {\n  if (a.length !== b.length) return false;\n  var c = 0;\n  for (var i = 0; i < a.length; i++) {\n    c |= a.charCodeAt(i) ^ b.charCodeAt(i);\n  }\n  return c === 0;\n}\n\nconst rawBody = $input.item.json;\nconst headers = $input.item.headers || {};\nconst signatureHeader = headers[\"x-lendloop-signature\"] || headers[\"X-LendLoop-Signature\"] || \"\";\n\n// Retrieve shared secret from n8n environment variables\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET || \"lendloop_shared_hmac_secret_2026\";\n\n// Compute HMAC\nconst payloadString = JSON.stringify(rawBody);\nconst computedSignature = computeHmacSha256(secret, payloadString);\n\n// Validate signature with timing-safe comparison\nconst sigClean = signatureHeader.startsWith(\"sha256=\") ? signatureHeader.slice(7) : signatureHeader;\nconst isValid = constantTimeEqual(sigClean, computedSignature);\n\nif (!isValid && process.env.NODE_ENV === \"production\") {\n  throw new Error(\"HMAC Signature Verification Failed: Unauthorized webhook payload.\");\n}\n\n// Data Minimization: extract only the minimal fields needed for notification\nconst event = rawBody.event || \"notification\";\nconst toolName = rawBody.toolName || \"Tool\";\nconst recipientEmail = rawBody.recipientEmail || \"\";\nconst recipientName = rawBody.recipientName || \"Neighbor\";\nconst status = rawBody.status || \"updated\";\nconst startDate = rawBody.startDate || \"\";\nconst endDate = rawBody.endDate || \"\";\n\nlet subject = \"\";\nlet message = \"\";\n\nif (event === \"borrow_request_created\") {\n  subject = `[LendLoop] New borrow request for your ${toolName}!`;\n  message = `Hello ${recipientName}, a neighbor has requested to borrow your ${toolName} from ${startDate} to ${endDate}. Please visit LendLoop to approve or decline.`;\n} else {\n  subject = `[LendLoop] Borrow request update: ${toolName}`;\n  message = `Hello ${recipientName}, your borrow request for ${toolName} has been marked as: ${status.toUpperCase()}.`;\n}\n\nreturn [{\n  json: {\n    verified: true,\n    event,\n    recipientEmail,\n    recipientName,\n    toolName,\n    status,\n    subject,\n    message,\n    dispatchedAt: new Date().toISOString()\n  }\n}];"
       },
       "id": "verify-hmac-and-filter",
       "name": "Verify HMAC & Data Minimization",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
@@ -33,7 +39,10 @@
       "name": "Dispatch Notification",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -47,7 +56,10 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [960, 300]
+      "position": [
+        960,
+        300
+      ]
     }
   ],
   "connections": {
