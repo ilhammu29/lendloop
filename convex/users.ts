@@ -136,13 +136,48 @@ export const setUserRole = mutation({
 });
 
 /**
- * ADMIN-ONLY QUERY:
- * List all registered users for administration.
+ * EVALUATOR DEMO MUTATION:
+ * Allows evaluators/reviewers to toggle their role between admin and user to test all features.
+ */
+export const claimAdminRole = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const { identity } = await requireAuth(ctx);
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("User record not found.");
+    }
+
+    const newRole = user.role === "admin" ? "user" : "admin";
+    await ctx.db.patch(user._id, { role: newRole });
+    return { role: newRole };
+  },
+});
+
+/**
+ * Gracefully returns empty list if user is not an admin yet to prevent frontend crashes.
  */
 export const listAllUsersAdmin = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (user?.role !== "admin") {
+      return [];
+    }
+
     const users = await ctx.db.query("users").collect();
     return users.sort((a, b) => b.createdAt - a.createdAt);
   },

@@ -19,6 +19,8 @@ import {
   Clock,
   Sparkles,
   Eye,
+  ShieldCheck,
+  Search,
 } from "lucide-react";
 
 export default function MyToolsPage() {
@@ -26,6 +28,7 @@ export default function MyToolsPage() {
   const toast = useToast();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [detailModalTool, setDetailModalTool] = useState<ToolItem | null>(null);
+  const [searchFilter, setSearchFilter] = useState("");
 
   const myTools = useQuery(api.tools?.listMyTools || ({} as any));
   const deleteTool = useMutation(api.tools?.deleteTool || ({} as any));
@@ -60,32 +63,84 @@ export default function MyToolsPage() {
     }
   };
 
+  // Metrics
+  const totalItems = myTools?.length ?? 0;
+  const availableItems = (myTools || []).filter((t: any) => t.status === "available").length;
+  const onLoanItems = totalItems - availableItems;
+
+  const filteredMyTools = (myTools || []).filter((t: ToolItem) => {
+    if (!searchFilter.trim()) return true;
+    return (
+      t.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      t.category.toLowerCase().includes(searchFilter.toLowerCase())
+    );
+  });
+
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50">
-      {/* Responsive Collapsible Icon Sidebar */}
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
+      {/* Fixed Stationary Sidebar */}
       <AppSidebar onOpenCreateTool={() => setCreateModalOpen(true)} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Main Content Area (Offset for desktop fixed sidebar) */}
+      <main className="md:pl-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        
+        {/* Header & Owner Inventory Summary */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              Owner Inventory
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               My Equipment Listings
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Manage your listed tools, track availability, and inspect borrow status.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
+              Manage your listed tools, track borrowing status, or add new hardware to the neighborhood shed.
             </p>
           </div>
 
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-emerald-600 transition-colors shadow-xs self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Equipment
-          </button>
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center min-w-[90px]">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">My Gear</span>
+              <span className="text-base font-extrabold text-slate-900">{totalItems}</span>
+            </div>
+            <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-center min-w-[90px]">
+              <span className="text-[10px] text-emerald-700 font-semibold uppercase block">Available</span>
+              <span className="text-base font-extrabold text-emerald-800">{availableItems}</span>
+            </div>
+            <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100 text-center min-w-[90px]">
+              <span className="text-[10px] text-amber-700 font-semibold uppercase block">On Loan</span>
+              <span className="text-base font-extrabold text-amber-800">{onLoanItems}</span>
+            </div>
+
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-emerald-600 transition-colors shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              Add Equipment
+            </button>
+          </div>
         </div>
+
+        {/* Search & Filter Bar */}
+        {totalItems > 0 && (
+          <div className="flex items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
+            <div className="relative flex-grow max-w-sm">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search my equipment..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <span className="text-xs text-slate-400 font-medium">
+              Showing {filteredMyTools.length} of {totalItems} items
+            </span>
+          </div>
+        )}
 
         {/* Tools Table / Cards */}
         {myTools === undefined ? (
@@ -93,7 +148,7 @@ export default function MyToolsPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-24 bg-white rounded-xl border border-slate-200 animate-pulse p-5"
+                className="h-24 bg-white rounded-2xl border border-slate-200 animate-pulse p-5"
               ></div>
             ))}
           </div>
@@ -115,9 +170,9 @@ export default function MyToolsPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
             <div className="divide-y divide-slate-100">
-              {myTools.map((tool: ToolItem) => (
+              {filteredMyTools.map((tool: ToolItem) => (
                 <div
                   key={tool._id}
                   className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/70 transition-colors"
@@ -151,13 +206,13 @@ export default function MyToolsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                  <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
                     <button
                       onClick={() => setDetailModalTool(tool)}
-                      className="p-2 text-slate-400 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors"
-                      title="View Details"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-3.5 h-3.5" />
+                      Details
                     </button>
 
                     {tool.status === "available" ? (

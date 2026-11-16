@@ -277,11 +277,25 @@ export const getLoanActivity = query({
 /**
  * ADMIN-ONLY QUERY:
  * View all loans across the platform.
+ * Gracefully returns empty list if user is not an admin yet to prevent frontend crashes.
  */
 export const listAllLoansAdmin = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (user?.role !== "admin") {
+      return [];
+    }
+
     const allLoans = await ctx.db.query("loans").collect();
     return allLoans.sort((a, b) => b.createdAt - a.createdAt);
   },

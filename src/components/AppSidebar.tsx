@@ -175,12 +175,12 @@ export default function AppSidebar({ onOpenCreateTool }: AppSidebarProps) {
         </div>
       )}
 
-      {/* Desktop Responsive Icon Sidebar (Compact by default w-16, Expands to w-64) */}
+      {/* Desktop Responsive Icon Sidebar (Fixed top-16 left-0, completely stationary on scroll) */}
       <aside
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
-        className={`hidden md:flex flex-col justify-between bg-white border-r border-slate-200/90 py-5 transition-all duration-200 ease-in-out shrink-0 sticky top-16 h-[calc(100vh-4rem)] z-30 ${
-          isExpanded ? "w-60 shadow-xl" : "w-16 shadow-xs"
+        className={`hidden md:flex flex-col justify-between bg-white border-r border-slate-200/90 py-5 transition-all duration-200 ease-in-out fixed top-16 left-0 h-[calc(100vh-4rem)] z-30 ${
+          isExpanded ? "w-60 shadow-2xl z-40" : "w-16 shadow-xs"
         }`}
       >
         <div className="space-y-4 px-2.5">

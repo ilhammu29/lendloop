@@ -9,6 +9,7 @@ import BorrowModal from "../../components/BorrowModal";
 import CreateToolModal from "../../components/CreateToolModal";
 import ToolDetailModal from "../../components/ToolDetailModal";
 import AppSidebar from "../../components/AppSidebar";
+import CategoryIcon from "../../components/CategoryIcon";
 import { useToast } from "../../components/Toast";
 import { ToolItem } from "../../types";
 import {
@@ -20,6 +21,11 @@ import {
   Layers,
   ArrowUpDown,
   Sparkles,
+  LayoutGrid,
+  List,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -41,6 +47,7 @@ export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "name" | "available">("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [borrowModalTool, setBorrowModalTool] = useState<ToolItem | null>(null);
   const [detailModalTool, setDetailModalTool] = useState<ToolItem | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -123,10 +130,15 @@ export default function DashboardPage() {
     }
   };
 
-  // Compute category count map
+  // Compute category count map and platform metrics
   const categoryCounts: Record<string, number> = {};
+  let availableCount = 0;
+  const uniqueLenders = new Set<string>();
+
   (allToolsUnfiltered || []).forEach((t: any) => {
     categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
+    if (t.status === "available") availableCount++;
+    if (t.ownerId) uniqueLenders.add(t.ownerId);
   });
 
   const filteredTools = (tools || []).filter((tool: ToolItem) => {
@@ -138,35 +150,55 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50">
-      {/* Responsive Collapsible Icon Sidebar */}
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50">
+      {/* Fixed Stationary Sidebar */}
       <AppSidebar onOpenCreateTool={() => setCreateModalOpen(true)} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
-        {/* Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Main Content Area (Offset for desktop fixed sidebar) */}
+      <main className="md:pl-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        
+        {/* Top Header & Metrics Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              Community Equipment Catalog
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              Community Tool Shed
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Browse Equipment Directory
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Borrow power tools, garden gear, and household machinery directly from verified neighbors.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
+              Borrow well-maintained power tools, lawn mowers, and camping gear directly from verified neighborhood owners.
             </p>
           </div>
 
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-emerald-600 transition-colors shadow-xs self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            List Equipment
-          </button>
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center min-w-[90px]">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">Total Gear</span>
+              <span className="text-base font-extrabold text-slate-900">{allToolsUnfiltered?.length ?? 0}</span>
+            </div>
+            <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-center min-w-[90px]">
+              <span className="text-[10px] text-emerald-700 font-semibold uppercase block">Available</span>
+              <span className="text-base font-extrabold text-emerald-800">{availableCount}</span>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center min-w-[90px]">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">Lenders</span>
+              <span className="text-base font-extrabold text-slate-900">{uniqueLenders.size}</span>
+            </div>
+
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-emerald-600 transition-colors shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              List Equipment
+            </button>
+          </div>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="space-y-3.5">
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        {/* Search, Filter & Layout Controls */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
             {/* Search Input */}
             <div className="relative flex-grow max-w-md">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -176,7 +208,7 @@ export default function DashboardPage() {
                 placeholder="Search equipment, brand, owner... (Press / to focus)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               />
               {searchQuery && (
                 <button
@@ -188,24 +220,52 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Sorting Dropdown */}
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-xs text-slate-500 font-medium">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="newest">Recently Added</option>
-                <option value="available">Available First</option>
-                <option value="name">Name (A-Z)</option>
-              </select>
+            {/* View Mode & Sorting */}
+            <div className="flex items-center gap-3 self-end md:self-auto">
+              {/* Grid / List Toggle */}
+              <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1.5 rounded-md text-xs transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-1.5 rounded-md text-xs transition-colors ${
+                    viewMode === "list"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                  title="List View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Sorting Dropdown */}
+              <div className="flex items-center gap-1.5">
+                <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="newest">Recently Added</option>
+                  <option value="available">Available First</option>
+                  <option value="name">Name (A-Z)</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Category Chips with Counts */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1 border-t border-slate-100">
             {CATEGORIES.map((cat) => {
               const count =
                 cat.value === "all"
@@ -217,10 +277,10 @@ export default function DashboardPage() {
                 <button
                   key={cat.value}
                   onClick={() => setSelectedCategory(cat.value)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                     isSelected
                       ? "bg-slate-900 text-white"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                      : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <span>{cat.label}</span>
@@ -228,7 +288,7 @@ export default function DashboardPage() {
                     className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
                       isSelected
                         ? "bg-emerald-400 text-slate-950"
-                        : "bg-slate-100 text-slate-500"
+                        : "bg-slate-200 text-slate-600"
                     }`}
                   >
                     {count}
@@ -239,15 +299,15 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Equipment Grid */}
+        {/* Equipment Results Display */}
         {tools === undefined ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="h-72 bg-white border border-slate-200 rounded-xl animate-pulse p-5 space-y-3"
+                className="h-72 bg-white border border-slate-200 rounded-2xl animate-pulse p-5 space-y-3"
               >
-                <div className="h-40 bg-slate-100 rounded-lg"></div>
+                <div className="h-40 bg-slate-100 rounded-xl"></div>
                 <div className="h-4 bg-slate-200 rounded w-3/4"></div>
                 <div className="h-3 bg-slate-100 rounded w-1/2"></div>
               </div>
@@ -274,7 +334,7 @@ export default function DashboardPage() {
               Reset Filters
             </button>
           </div>
-        ) : (
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredTools.map((tool: ToolItem) => (
               <ToolCard
@@ -287,6 +347,74 @@ export default function DashboardPage() {
                 onViewDetails={(t) => setDetailModalTool(t)}
               />
             ))}
+          </div>
+        ) : (
+          /* List View */
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+            <div className="divide-y divide-slate-100">
+              {filteredTools.map((tool: ToolItem) => (
+                <div
+                  key={tool._id}
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/70 transition-colors"
+                >
+                  <div className="flex items-start gap-4">
+                    <CategoryIcon category={tool.category} size="md" />
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4
+                          onClick={() => setDetailModalTool(tool)}
+                          className="text-sm font-bold text-slate-900 hover:text-emerald-700 cursor-pointer transition-colors"
+                        >
+                          {tool.name}
+                        </h4>
+                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                          {tool.category}
+                        </span>
+                        <span className="text-[10px] capitalize font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                          {tool.condition}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-1 max-w-xl">
+                        {tool.description}
+                      </p>
+                      <span className="text-[11px] text-slate-400 mt-0.5 block">
+                        Lender: {tool.ownerName}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                    {tool.status === "available" ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        Available
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        On Loan
+                      </span>
+                    )}
+
+                    <button
+                      onClick={() => setDetailModalTool(tool)}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors"
+                    >
+                      Details
+                    </button>
+
+                    {tool.status === "available" && tool.ownerId !== currentUser?.clerkId && (
+                      <button
+                        onClick={() => setBorrowModalTool(tool)}
+                        className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-emerald-600 text-xs font-bold text-white transition-colors"
+                      >
+                        Borrow
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
